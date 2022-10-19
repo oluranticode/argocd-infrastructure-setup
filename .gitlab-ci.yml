@@ -1,7 +1,8 @@
 include:
   - project: "flutterwavego/devops/pipeline-template-definitions"
     file: "build.yml"
-
+    ref: "template-v3"
+    
 variables:
   AWS_ECR: 724526322405.dkr.ecr.eu-west-3.amazonaws.com
   AWS_ECR_DEV: 326355388919.dkr.ecr.eu-west-3.amazonaws.com
