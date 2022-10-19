@@ -1,7 +1,10 @@
 include:
   - project: "flutterwavego/devops/pipeline-template-definitions"
     file: "build.yml"
-   
+
+variables:
+  MAVEN_CLI_OPTS: " --batch-mode"
+  
 stages:
   - maven
   - build
