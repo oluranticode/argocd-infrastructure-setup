@@ -65,24 +65,24 @@ build_image_dev:
 
 
 
-# # This section will trigger ArgoCD to deploy the image to the development kubernetes cluster in order to test the application.
-# deploy_dev_app:
-#   extends: .deploy_test_app
-#   environment:
-#     name: development
-#   script:
-#     - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api/nibss-easy-pay-api-dev.yaml
-#   only:
-#     - dev
-#     - easy-pay
+# This section will trigger ArgoCD to deploy the image to the development kubernetes cluster in order to test the application.
+deploy_dev_app:
+  extends: .deploy_test_app
+  environment:
+    name: development
+  script:
+    - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api/nibss-easy-pay-api-dev.yaml
+  only:
+    - dev
+    - easy-pay
 
-# # This section will trigger ArgoCD to deploy the image to the production kubernetes cluster.
-# deploy_prod_app:
-#   extends: .deploy_prod_app
-#   environment:
-#     name: production
-#   script:
-#     - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api/nibss-easy-pay-api-prod.yaml
-#   only:
-#     - main
-#     - easy-pay
+# This section will trigger ArgoCD to deploy the image to the production kubernetes cluster.
+deploy_prod_app:
+  extends: .deploy_prod_app
+  environment:
+    name: production
+  script:
+    - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api/nibss-easy-pay-api-prod.yaml
+  only:
+    - main
+    - easy-pay
