@@ -45,7 +45,7 @@ maven_image_prod:
     - sed -i "s/{{DB_PASS}}/$DB_PASS/g" src/main/resources/application.properties
     - sed -i "s/{{MAVEN}}/$MAVEN/g" src/main/resources/application.properties
     - sed -i "s/{{ENV}}/$ENV/g" src/main/resources/application.properties
-    - sed -i "s/{{ROLLBAR}}/$ROLLBAR/g" src/main/resources/application.properties
+    
   after_script:
     - cp argocd/add-ons/dd-java-agent.jar target
   only:
