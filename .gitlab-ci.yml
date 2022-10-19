@@ -2,7 +2,6 @@ include:
   - project: "flutterwavego/devops/pipeline-template-definitions"
     file: "build.yml"
    
-
 variables:
   AWS_ECR: 724526322405.dkr.ecr.eu-west-3.amazonaws.com
   AWS_ECR_DEV: 326355388919.dkr.ecr.eu-west-3.amazonaws.com
@@ -12,7 +11,6 @@ stages:
   - maven
   - build
   - deploy
-
 
 ## This section will install maven and create the path for depolymnet
 maven_image_dev:
@@ -31,8 +29,7 @@ maven_image_dev:
     - cp argocd/add-ons/dd-java-agent.jar target
   only:
     - dev
-  
-    
+   
 # #This section will install maven and create the path for production
 maven_image_prod:
   extends: .maven_build
@@ -45,25 +42,19 @@ maven_image_prod:
     - sed -i "s/{{DB_PASS}}/$DB_PASS/g" src/main/resources/application.properties
     - sed -i "s/{{MAVEN}}/$MAVEN/g" src/main/resources/application.properties
     - sed -i "s/{{ENV}}/$ENV/g" src/main/resources/application.properties
-    
   after_script:
     - cp argocd/add-ons/dd-java-agent.jar target
   only:
     - main
   
    
-    
 ## This section builds the docker image for development testing
 build_image_dev:
   extends: .build_image
-  environment:
-    name: development
   only:
     - dev
     - main
   
-
-
 
 # This section will trigger ArgoCD to deploy the image to the development kubernetes cluster in order to test the application.
 deploy_dev_app:
@@ -75,7 +66,6 @@ deploy_dev_app:
   only:
     - dev
   
-
 # This section will trigger ArgoCD to deploy the image to the production kubernetes cluster.
 deploy_prod_app:
   extends: .deploy_prod_app
