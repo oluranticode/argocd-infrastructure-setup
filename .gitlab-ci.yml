@@ -1,8 +1,8 @@
 include:
   - project: "flutterwavego/devops/pipeline-template-definitions"
     file: "build.yml"
-    ref: "template-v3"
-    
+   
+
 variables:
   AWS_ECR: 724526322405.dkr.ecr.eu-west-3.amazonaws.com
   AWS_ECR_DEV: 326355388919.dkr.ecr.eu-west-3.amazonaws.com
@@ -71,7 +71,7 @@ build_image_dev:
 #   environment:
 #     name: development
 #   script:
-#     - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/access-imto/access-imto-dev.yaml
+#     - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api/nibss-easy-pay-api-dev.yaml
 #   only:
 #     - dev
 #     - easy-pay
@@ -82,7 +82,7 @@ build_image_dev:
 #   environment:
 #     name: production
 #   script:
-#     - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/access-imto/access-imto-prod.yaml
+#     - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api/nibss-easy-pay-api-prod.yaml
 #   only:
 #     - main
 #     - easy-pay
