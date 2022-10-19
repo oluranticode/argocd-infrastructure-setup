@@ -43,6 +43,8 @@ maven_image_prod:
 ## This section builds the docker image for development testing
 build_image_dev:
   extends: .build_image
+  environment:
+    name: development
   only:
     - dev
     - main
