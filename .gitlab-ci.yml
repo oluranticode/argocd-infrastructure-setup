@@ -1,0 +1,75 @@
+include:
+  - project: "flutterwavego/devops/pipeline-template-definitions"
+    file: "build.yml"
+
+variables:
+  MAVEN_CLI_OPTS: " --batch-mode"
+  
+stages:
+  - maven
+  - build
+  - deploy
+
+## This section will install maven and create the path for depolymnet
+maven_image_dev:
+  extends: .maven_build
+  environment:
+    name: development
+  before_script:
+    - git clone https://$GIT_USER:$GIT_TOKEN@gitlab.com/Flutterwavego/devops/argocd.git
+    - sed -i "s/{{DB_URL}}/$DB_URL/g" src/main/resources/application.properties
+    - sed -i "s/{{DB_USER}}/$DB_USER/g" src/main/resources/application.properties
+    - sed -i "s/{{DB_PASS}}/$DB_PASS/g" src/main/resources/application.properties
+    - sed -i "s/{{MAVEN}}/$MAVEN/g" src/main/resources/application.properties
+    - sed -i "s/{{ENV}}/$ENV/g" src/main/resources/application.properties
+  after_script:
+    - cp argocd/add-ons/dd-java-agent.jar target
+  only:
+    - dev
+   
+# #This section will install maven and create the path for production
+maven_image_prod:
+  extends: .maven_build
+  environment:
+    name: production
+  script:
+    - sed -i "s/{{DB_URL}}/$DB_URL/g" src/main/resources/application.properties
+    - sed -i "s/{{DB_USER}}/$DB_USER/g" src/main/resources/application.properties
+    - sed -i "s/{{DB_PASS}}/$DB_PASS/g" src/main/resources/application.properties
+    - sed -i "s/{{MAVEN}}/$MAVEN/g" src/main/resources/application.properties
+    - sed -i "s/{{ENV}}/$ENV/g" src/main/resources/application.properties
+    - "mvn $MAVEN_CLI_OPTS package -e -B -U -DskipTests"
+    - "mvn clean install -Dmaven.test.skip=true"
+  only:
+    - main
+  
+   
+## This section builds the docker image for development testing
+build_image_dev:
+  extends: .build_image
+  environment:
+    name: development
+  only:
+    - dev
+    - main
+
+# This section will trigger ArgoCD to deploy the image to the development kubernetes cluster in order to test the application.
+deploy_dev_app:
+  extends: .deploy_test_app
+  environment:
+    name: development
+  script:
+    - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api/nibss-easy-pay-api-dev.yaml
+  only:
+    - dev
+  
+# This section will trigger ArgoCD to deploy the image to the production kubernetes cluster.
+deploy_prod_app:
+  extends: .deploy_prod_app
+  environment:
+    name: production
+  script:
+    - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api/nibss-easy-pay-api-prod.yaml
+  only:
+    - main
+  
