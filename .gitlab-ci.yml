@@ -53,9 +53,9 @@ maven_build_prod:
    
 ## This section builds the docker image for development testing
 build_image_dev:
-  extends: .build_image
   environment:
-    name: development
+    name: production
+  extends: .build_image
   only:
     - dev
     - main
@@ -66,7 +66,7 @@ deploy_dev_app:
   environment:
     name: development
   script:
-    - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api/nibss-easy-pay-api-dev.yaml
+    - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/dev-cluster/nibss-easy-pay-api-dev.yaml
   only:
     - dev
   
@@ -76,7 +76,7 @@ deploy_prod_app:
   environment:
     name: production
   script:
-    - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api/nibss-easy-pay-api-prod.yaml
+    - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/acquire-cluster/nibss-easy-pay-api-prod.yaml
   only:
     - main
   
