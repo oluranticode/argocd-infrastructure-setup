@@ -23,9 +23,10 @@ public class SaveLogService {
   }
   @Async
   public void saveLog(String reference, String operationType, Object requestBody,
-      Object responseBody, String responseCode, String status) {
+      Object responseBody, String responseCode, String status, String appUser) {
     Log logs = new Log();
     logs.setReference(reference);
+    logs.setAppUser(appUser);
     logs.setOperationType(operationType);
     logs.setRequestBody(gson.toJson(requestBody));
     logs.setResponseBody(gson.toJson(responseBody));
