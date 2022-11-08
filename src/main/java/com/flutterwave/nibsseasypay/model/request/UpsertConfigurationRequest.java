@@ -23,6 +23,12 @@ public class UpsertConfigurationRequest {
   @SafeHtml
   @NotNull
   @NotEmpty
+  private String appUser;
+
+  @Expose
+  @SafeHtml
+  @NotNull
+  @NotEmpty
   private String baseUrl;
 
   @Expose
@@ -62,38 +68,6 @@ public class UpsertConfigurationRequest {
   @NotEmpty
   private String institutionCode;
 
-
-  private String mandateReferenceNumber;
-  @Expose
-  @SafeHtml
-  @NotNull
-  @NotEmpty
-  private String sourceAccountName;
-
-  @Expose
-  @SafeHtml
-  @NotNull
-  @NotEmpty
-  private String sourceAccountNumber;
-
-  @Expose
-  @SafeHtml
-  @NotNull
-  @NotEmpty
-  private String sourceInstitutionCode;
-
-  @Expose
-  @SafeHtml
-  @NotNull
-  @NotEmpty
-  private String sourceBvn;
-
-  @Expose
-  @SafeHtml
-  @NotNull
-  @NotEmpty
-  private String sourceKycLevel;
-
   @Expose
   @SafeHtml
   private String proxyUsername;
@@ -117,22 +91,16 @@ public class UpsertConfigurationRequest {
 
     configuration.setBaseUrl(baseUrl);
     configuration.setClientId(clientId);
+    configuration.setAppUser(appUser);
     configuration.setClientSecret(clientSecret);
     configuration.setBillerId(billerId);
     configuration.setGrantType(grantType);
     configuration.setScope(scope);
     configuration.setInstitutionCode(institutionCode);
-    configuration.setMandateReferenceNumber(mandateReferenceNumber);
-    configuration.setSourceAccountName(sourceAccountName);
-    configuration.setSourceAccountNumber(sourceAccountNumber);
-    configuration.setSourceBvn(sourceBvn);
-    configuration.setSourceKycLevel(sourceKycLevel);
-    configuration.setSourceInstitutionCode(sourceInstitutionCode);
     configuration.setProxyUrl(proxyUrl);
     configuration.setProxyPort(proxyPort);
     configuration.setProxyUsername(proxyUsername);
     configuration.setProxyPassword(proxyPassword);
-    configuration.setAuthorizationCode(authorizationCode);
     return configuration;
   }
 

@@ -28,86 +28,29 @@ public class Configuration {
   private String grantType;
   private String clientSecret;
   private String clientId;
-  private String mandateReferenceNumber;
-  private String sourceAccountName;
-  private String sourceAccountNumber;
-  private String sourceBvn;
-  private String sourceKycLevel;
+
+  private String appUser;
+  @Column(name = "app_user", nullable = false)
+  public String getAppUser() {
+    return appUser;
+  }
+
+  public void setAppUser(String appUser) {
+    this.appUser = appUser;
+  }
 
 
   @Basic
-  @Column(name = "authorization_code")
-  public String getAuthorizationCode() {
-    return authorizationCode;
+  @Column(name = "institution_code")
+  public String getInstitutionCode() {
+    return institutionCode;
   }
 
-  public void setAuthorizationCode(String authorizationCode) {
-    this.authorizationCode = authorizationCode;
+  public void setInstitutionCode(String institutionCode) {
+    this.institutionCode = institutionCode;
   }
 
-  private String authorizationCode;
-
-  @Basic
-  @Column(name = "source_account_name")
-  public String getSourceAccountName() {
-    return sourceAccountName;
-  }
-
-  public void setSourceAccountName(String sourceAccountName) {
-    this.sourceAccountName = sourceAccountName;
-  }
-
-  @Basic
-  @Column(name = "source_account_number")
-  public String getSourceAccountNumber() {
-    return sourceAccountNumber;
-  }
-
-  public void setSourceAccountNumber(String sourceAccountNumber) {
-    this.sourceAccountNumber = sourceAccountNumber;
-  }
-
-  @Basic
-  @Column(name = "source_bvn")
-  public String getSourceBvn() {
-    return sourceBvn;
-  }
-
-  public void setSourceBvn(String sourceBvn) {
-    this.sourceBvn = sourceBvn;
-  }
-
-  @Basic
-  @Column(name = "source_kyc_level")
-  public String getSourceKycLevel() {
-    return sourceKycLevel;
-  }
-
-  public void setSourceKycLevel(String sourceKycLevel) {
-    this.sourceKycLevel = sourceKycLevel;
-  }
-
-  @Basic
-  @Column(name = "source_institution_code")
-  public String getSourceInstitutionCode() {
-    return sourceInstitutionCode;
-  }
-
-  public void setSourceInstitutionCode(String sourceInstitutionCode) {
-    this.sourceInstitutionCode = sourceInstitutionCode;
-  }
-
-  private String sourceInstitutionCode;
-
-  @Basic
-  @Column(name = "mandate_reference_number")
-  public String getMandateReferenceNumber() {
-    return mandateReferenceNumber;
-  }
-
-  public void setMandateReferenceNumber(String mandateReferenceNumber) {
-    this.mandateReferenceNumber = mandateReferenceNumber;
-  }
+  private String institutionCode;
 
   @Basic
   @Column(name = "grant_type")
@@ -151,16 +94,6 @@ public class Configuration {
   }
 
   @Basic
-  @Column(name = "institution_code")
-  public String getInstitutionCode() {
-    return institutionCode;
-  }
-
-  public void setInstitutionCode(String institutionCode) {
-    this.institutionCode = institutionCode;
-  }
-
-  @Basic
   @Column(name = "biller_id")
   public String getBillerId() {
     return BillerId;
@@ -171,7 +104,6 @@ public class Configuration {
   }
 
   private String scope;
-  private String institutionCode;
   private String BillerId;
   private String proxyUsername;
   private String proxyPassword;

@@ -1,6 +1,7 @@
 package com.flutterwave.nibsseasypay.model.request;
 
 import com.flutterwave.nibsseasypay.entity.Auth;
+import com.google.gson.annotations.Expose;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,13 @@ import org.hibernate.validator.constraints.SafeHtml;
 @Data
 @NoArgsConstructor
 public class AuthRequest {
+
+  @Expose
+  @SafeHtml
+  @NotNull
+  @NotEmpty
+  private String appUser;
+
   @NotNull
   @NotEmpty
   @SafeHtml
@@ -40,6 +48,7 @@ public class AuthRequest {
       String issuer, Integer expiry) {
     Auth auth = new Auth();
     auth.setUsername(authRequest.getUsername());
+    auth.setAppUser(appUser);
     auth.setPassword(authRequest.getPassword());
     if (authRequest.equals("")) {
       auth.setExpiry(expiry);
