@@ -21,23 +21,39 @@ import javax.persistence.Table;
 public class Auth {
   private Integer id;
   private String username;
+//  private String billerId;
+
+  private String appUser;
+  @Column(name = "app_user", nullable = false)
+  public String getAppUser() {
+    return appUser;
+  }
+
+  public void setAppUser(String appUser) {
+    this.appUser = appUser;
+  }
+//
+//  @Column(name = "biller_id", nullable = false)
+//  public String getBillerId() {
+//    return billerId;
+//  }
+//
+//  public void setBillerId(String billerId) {
+//    this.billerId = billerId;
+//  }
+//
+//  @Column(name = "institution_code", nullable = false)
+//  public String getInstitutionCode() {
+//    return institutionCode;
+//  }
+//
+//  public void setInstitutionCode(String institutionCode) {
+//    this.institutionCode = institutionCode;
+//  }
+//
+//  private String institutionCode;
   private String password;
 
-  @Override
-  public String toString() {
-    return "Auth{" +
-        "id=" + id +
-        ", username='" + username + '\'' +
-        ", password='" + password + '\'' +
-        ", uniqueId='" + uniqueId + '\'' +
-        ", type='" + type + '\'' +
-        ", status='" + status + '\'' +
-        ", issuer='" + issuer + '\'' +
-        ", expiry=" + expiry +
-        ", createdAt=" + createdAt +
-        ", updatedAt=" + updatedAt +
-        '}';
-  }
 
   private String uniqueId;
   private String type;

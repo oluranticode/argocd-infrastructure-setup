@@ -40,6 +40,19 @@ public class Log {
   public void setId(Integer id) {
     this.id = id;
   }
+
+  private String appUser;
+  @Basic
+  @Column(name = "app_user", nullable = false)
+  public String getAppUser() {
+    return appUser;
+  }
+
+  public void setAppUser(String appUser) {
+    this.appUser = appUser;
+  }
+
+
   @Basic
   @Column(name = "reference")
   public String getReference() {

@@ -2,7 +2,7 @@ package com.flutterwave.nibsseasypay.model.request.charge;
 
 import com.flutterwave.nibsseasypay.entity.Configuration;
 import com.flutterwave.nibsseasypay.entity.Payment;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssNameEquiryRequest;
+import com.flutterwave.nibsseasypay.entity.SourceAccount;
 import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssTransactionRequest;
 import com.flutterwave.nibsseasypay.nibsseastpay.model.response.NibssNameEnquiryResponse;
 import lombok.AllArgsConstructor;
@@ -29,7 +29,7 @@ public class ChargeRequest {
     private ChargeTransactionData transaction;
 
     public static NibssTransactionRequest chargeRequest(ChargeRequest chargeRequest, String linkingReference,
-        NibssNameEnquiryResponse nameEnquiryResponse, Configuration configuration) {
+        NibssNameEnquiryResponse nameEnquiryResponse, Configuration configuration, SourceAccount sourceAccount) {
 
        return NibssTransactionRequest.builder()
            .amount(chargeRequest.getOrder().getAmount())
@@ -41,21 +41,21 @@ public class ChargeRequest {
            .billerId(configuration.getBillerId())
            .channelCode(chargeRequest.getChannelCode())
            .destinationInstitutionCode(chargeRequest.getTransaction().getSourceoffunds().getAccount().getTo().getBank().getCode())
-           .mandateReferenceNumber(configuration.getMandateReferenceNumber())
+           .mandateReferenceNumber(sourceAccount.getMandateReferenceNumber())
            .nameEnquiryRef(nameEnquiryResponse.getTransactionId())
-           .originatorAccountName(configuration.getSourceAccountName())
-           .originatorAccountNumber(configuration.getSourceAccountNumber())
-           .originatorBankVerificationNumber(configuration.getSourceBvn())
-           .originatorKYCLevel(configuration.getSourceKycLevel())
+           .originatorAccountName(sourceAccount.getSourceAccountName())
+           .originatorAccountNumber(sourceAccount.getSourceAccountNumber())
+           .originatorBankVerificationNumber(sourceAccount.getSourceBvn())
+           .originatorKYCLevel(sourceAccount.getSourceKycLevel())
            .originatorNarration(chargeRequest.getTransaction().getNarration())
            .paymentReference(chargeRequest.getTransaction().getReference())
-           .SourceInstitutionCode(Integer.valueOf(configuration.getSourceInstitutionCode()))
+           .SourceInstitutionCode(Integer.valueOf(sourceAccount.getSourceInstitutionCode()))
            .transactionId(linkingReference)
            .transactionLocation(chargeRequest.getTransactionLocation())
            .build();
     }
 
-    public static Payment buildPayment(ChargeRequest request, Configuration configuration,  String transactionId) {
+    public static Payment buildPayment(ChargeRequest request, Configuration configuration, String transactionId, SourceAccount sourceAccount) {
         Payment payment = new Payment();
         payment.setLinkingReference(transactionId);
         payment.setTransactionId(request.getTransaction().getReference());
@@ -63,15 +63,15 @@ public class ChargeRequest {
         payment.setBeneficiaryAccountName(request.getTransaction().getSourceoffunds().getAccount().getTo().getName());
         payment.setBeneficiaryAccountNumber(request.getTransaction().getSourceoffunds().getAccount().getTo().getNumber());
         payment.setDestinationInstitutionCode(request.getTransaction().getSourceoffunds().getAccount().getTo().getBank().getCode());
-        payment.setOriginatorAccountName(configuration.getSourceAccountName());
-        payment.setOriginatorAccountNumber(configuration.getSourceAccountNumber());
-        payment.setOriginatorBankVerificationNumber(configuration.getSourceBvn());
-        payment.setOriginatorKYCLevel(configuration.getSourceKycLevel());
+        payment.setOriginatorAccountName(sourceAccount.getSourceAccountName());
+        payment.setOriginatorAccountNumber(sourceAccount.getSourceAccountNumber());
+        payment.setOriginatorBankVerificationNumber(sourceAccount.getSourceBvn());
+        payment.setOriginatorKYCLevel(sourceAccount.getSourceKycLevel());
         payment.setBeneficiaryNarration(request.getTransaction().getNarration());
         payment.setOriginatorNarration(request.getTransaction().getNarration());
-        payment.setSourceInstitutionCode(configuration.getSourceInstitutionCode());
+        payment.setInstitutionCode(configuration.getInstitutionCode());
         payment.setChannelCode(request.getChannelCode());
-        payment.setMandateReferenceNumber(configuration.getMandateReferenceNumber());
+        payment.setMandateReferenceNumber(sourceAccount.getMandateReferenceNumber());
         payment.setTransactionLocation(request.getTransactionLocation());
         payment.setBillerId(configuration.getBillerId());
         return payment;
