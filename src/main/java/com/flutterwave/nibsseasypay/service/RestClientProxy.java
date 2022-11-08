@@ -180,11 +180,11 @@ public class RestClientProxy {
       log.info(String.format("%s response payload from Union Bank %s ", requestId, gson.toJson(resBody)));
       log.info(String.format(" %s response HTTP status code from Union Bank ", requestId),
           response.code());
-      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), gson.toJson(resBody), String.valueOf(response.code()), String.valueOf(response.code()));
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), gson.toJson(resBody), String.valueOf(response.code()), String.valueOf(response.code()), "");
       return gson.fromJson(resBody, responseClass);
     } catch (Exception e) {
       log.info(String.format("%s Request failed", requestId), e.getMessage());
-      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), e.getMessage(), "500", "ERROR");
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), e.getMessage(), "500", "ERROR","");
       throw new ProcessingException(e.getMessage());
     }
   }
@@ -263,11 +263,11 @@ public class RestClientProxy {
       log.info(String.format("%s response payload from NIBSS EASY PAY %s ", requestId, gson.toJson(resBody)));
       log.info(String.format(" %s response HTTP status code from  NIBSS EASY PAY ", requestId),
           response.code());
-      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), gson.toJson(resBody), String.valueOf(response.code()), String.valueOf(response.code()));
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), gson.toJson(resBody), String.valueOf(response.code()), String.valueOf(response.code()), "");
       return resBody;
     } catch (Exception e) {
       log.info(String.format("%s Request failed", requestId), e.getMessage());
-      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), e.getMessage(), "500", "ERROR");
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), e.getMessage(), "500", "ERROR", "");
       throw new ProcessingException(e.getMessage());
     }
   }
@@ -352,7 +352,7 @@ public class RestClientProxy {
       System.out.println("response HTTP status code from nibss : " + response.code());
       System.out.println("response payload from nibss : " + resBody);
 
-      saveLogService.saveLog(reference, reqBody, resBody, operationType, String.valueOf(response.code()), "");
+      saveLogService.saveLog(reference, reqBody, resBody, operationType, String.valueOf(response.code()), "", "");
       if (reqMediaType.equals("application/json")) {
         return objectMapper.readValue(resBody, responseClass);
       }
@@ -433,7 +433,7 @@ public class RestClientProxy {
       return gson.fromJson(resBody, responseClass);
     } catch (Exception e) {
       log.info(String.format("%s Request failed %s", configuration.getClientId(), e.getMessage()));
-      saveLogService.saveLog(configuration.getClientId(), "GET_TOKEN" + "_LOG", "", e.getMessage(), "500", "ERROR");
+      saveLogService.saveLog(configuration.getClientId(), "GET_TOKEN" + "_LOG", "", e.getMessage(), "500", "ERROR", "");
       throw new ProcessingException(e.getMessage());
     }
   }

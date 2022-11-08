@@ -100,7 +100,7 @@ public class PaymentService {
       payment = paymentRepository.save(payment);
 
       saveLogService.saveLog(chargeRequest.getTransaction().getReference(),
-          LogType.TRANSACTION_CHARGE.name(), gson.toJson(chargeRequest), "", "", "");
+          LogType.TRANSACTION_CHARGE.name(), gson.toJson(chargeRequest), "", "", "", sourceAccount.getAppUser());
 
       NibssNameEnquiryResponse nameEnquiryResponse = nameEnquiryInternal(chargeRequest);
 
@@ -152,7 +152,7 @@ public class PaymentService {
     SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
     Configuration configuration = configurationRepository.findOneById(1);
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
-        LogType.NAME_ENQUIRY_INTERNAL.name(), gson.toJson(nameEnquiryRequest), "", "", "");
+        LogType.NAME_ENQUIRY_INTERNAL.name(), gson.toJson(nameEnquiryRequest), "", "", "", configuration.getAppUser());
     String referecne = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/nameenquiry";
     NibssNameEquiryRequest nibssNameEquiryRequest = NameEnquiryRequest.nameChargeEnquiryRequest(nameEnquiryRequest, referecne);
@@ -162,7 +162,7 @@ public class PaymentService {
         "POST", "application/json", configuration,
         nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY_INTERNAL.name());
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
-        LogType.NAME_ENQUIRY_INTERNAL.name(),"" , "gson.toJson(response)", "", "");
+        LogType.NAME_ENQUIRY_INTERNAL.name(),"" , "gson.toJson(response)", "", "", configuration.getAppUser());
       return response;
   }
 
@@ -170,7 +170,7 @@ public class PaymentService {
     SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
     Configuration configuration = configurationRepository.findOneById(1);
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
-        LogType.NAME_ENQUIRY.name(), gson.toJson(nameEnquiryRequest), "", "", "");
+        LogType.NAME_ENQUIRY.name(), gson.toJson(nameEnquiryRequest), "", "", "", configuration.getAppUser());
     String referecne = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/nameenquiry";
     NibssNameEquiryRequest nibssNameEquiryRequest = NameEnquiryRequest.nameEnquiryRequest(nameEnquiryRequest, referecne);
@@ -187,7 +187,7 @@ public class PaymentService {
     SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
     Configuration configuration = configurationRepository.findOneById(1);
     saveLogService.saveLog(transactionId,
-        LogType.TRANSACTION_QUERY.name(), "", "", "", "");
+        LogType.TRANSACTION_QUERY.name(), "", "", "", "", configuration.getAppUser());
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/tsq";
     PaymentResponse paymentResponse = new PaymentResponse();
     Payment payment = verifyTransactionExist(transactionId);
@@ -226,7 +226,7 @@ public class PaymentService {
   public MandateResponse mandate(MandateRequest mandateRequest) {
 
     saveLogService.saveLog(mandateRequest.getReference(),
-        LogType.NAME_ENQUIRY.name(), gson.toJson(mandateRequest), "", "", "");
+        LogType.NAME_ENQUIRY.name(), gson.toJson(mandateRequest), "", "", "", "");
 
 
 
@@ -248,7 +248,7 @@ public class PaymentService {
     SourceAccount sourceAccount = fineOneByAccount(accountNumber);
     Configuration configuration = configurationRepository.findOneById(1);
     saveLogService.saveLog("",
-        LogType.GET_BALANCE.name(), "", "", "", "");
+        LogType.GET_BALANCE.name(), "", "", "", "", "");
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/balanceenquiry";
     String reference = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
     NibssGetBalanceRequest queryRequest = NibssGetBalanceRequest.builder()
