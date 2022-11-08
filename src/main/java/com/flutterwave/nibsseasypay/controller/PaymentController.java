@@ -91,4 +91,5 @@ public class PaymentController {
     MandateResponse response = paymentService.mandate(request);
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
+  
 }
