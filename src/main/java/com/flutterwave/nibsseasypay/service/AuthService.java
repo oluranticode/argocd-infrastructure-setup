@@ -9,10 +9,8 @@ import com.flutterwave.nibsseasypay.model.response.GetTokenResponse;
 import com.flutterwave.nibsseasypay.repository.AuthRepository;
 import com.flutterwave.nibsseasypay.repository.ConfigurationRepository;
 import com.flutterwave.nibsseasypay.security.JwtHandler;
-import com.google.gson.GsonBuilder;
+import com.flutterwave.nibsseasypay.util.JwtUtil;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwt;
-import io.jsonwebtoken.impl.DefaultJwtParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,13 +24,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
-  private final Configuration configuration;
   private final AuthRepository authRepository;
 
   @Autowired
-  public AuthService(ConfigurationRepository repository,
+  public AuthService(
       AuthRepository authRepository) {
-    this.configuration = repository.findOneById(1);
+//    this.configuration = configuration;
+//    this.configuration = repository.findOneById(1);
     this.authRepository = authRepository;
   }
 
@@ -87,16 +85,17 @@ public class AuthService {
   public Claims getClaims(String authCredentials, String path) {
     try {
       authCredentials = authCredentials.replace("Bearer ", "");
-      Claims authClaim = decodeTokenClaims(authCredentials);
+      System.out.println("Bereeeee" + authCredentials);
+      Claims authClaim = JwtUtil.decodeTokenClaims(authCredentials);
       Auth auth = authRepository.findOneByUniqueIdAndStatus(authClaim.get("id").toString(), "ACTIVE").orElseThrow(() ->
           new AuthenticationException("Invalid Token"));
       if(auth.getType().equals("CONFIGURATION") && (path.equals("/configurations") || path.equals("/appusers"))) {
-        return decode(authCredentials, auth.getPassword());
+        return JwtUtil.decode(authCredentials, auth.getPassword());
 //      Claims claims = JwtHandler.decodeJWT(authCredentials, auth.getClientSecret());
 //      log.info("claims=" + new GsonBuilder().create().toJson(claims));
 //      return claims;
       }else if(auth.getType().equals("API") && !path.equals("/configurations")) {
-        return decode(authCredentials, auth.getPassword());
+        return JwtUtil.decode(authCredentials, auth.getPassword());
       }else {
         throw new AuthenticationException("Invalid Token");
       }
@@ -106,18 +105,19 @@ public class AuthService {
     }
   }
 
-  private Claims decode(String authCredentials, String clientSecreteKey) {
-    Claims claims = JwtHandler.decodeJWT(authCredentials, clientSecreteKey);
-    log.info("claims=" + new GsonBuilder().create().toJson(claims));
-    return claims;
-  }
 
-  public Claims decodeTokenClaims(String token) {
-    String[] splitToken = token.split("\\.");
-    String unsignedToken = splitToken[0] + "." + splitToken[1] + ".";
-    DefaultJwtParser parser = new DefaultJwtParser();
-    Jwt<?, ?> jwt = parser.parse(unsignedToken);
-    Claims claims = (Claims) jwt.getBody();
-    return claims;
-  }
+//  private Claims decode(String authCredentials, String clientSecreteKey) {
+//    Claims claims = JwtHandler.decodeJWT(authCredentials, clientSecreteKey);
+//    log.info("claims=" + new GsonBuilder().create().toJson(claims));
+//    return claims;
+//  }
+//
+//  public Claims decodeTokenClaims(String token) {
+//    String[] splitToken = token.split("\\.");
+//    String unsignedToken = splitToken[0] + "." + splitToken[1] + ".";
+//    DefaultJwtParser parser = new DefaultJwtParser();
+//    Jwt<?, ?> jwt = parser.parse(unsignedToken);
+//    Claims claims = (Claims) jwt.getBody();
+//    return claims;
+//  }
 }

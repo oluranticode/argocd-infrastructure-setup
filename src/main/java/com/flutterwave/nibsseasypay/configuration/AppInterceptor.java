@@ -33,20 +33,20 @@ public class AppInterceptor implements HandlerInterceptor {
   @Override
   public boolean preHandle
       (@NotNull HttpServletRequest request,  @NotNull HttpServletResponse response, @NotNull Object handler) {
-//    try {
-//
-//      String authorization = request.getHeader("Authorization");
-//      Claims claims =  authService.getClaims(authorization, request.getRequestURI());
-//      if(claims.isEmpty()) {
-//        throw new AuthenticationException("Unauthorized");
-//      }else {
-//        return true;
-//      }
-//    } catch (Exception e) {
-//      log.info("authorization================  {} ",  e.getMessage());
-//      throw new AuthenticationException("Unauthorized");
-//    }
-    return true;
+    try {
+
+      String authorization = request.getHeader("Authorization");
+      Claims claims =  authService.getClaims(authorization, request.getRequestURI());
+      if(claims.isEmpty()) {
+        throw new AuthenticationException("Unauthorized");
+      }else {
+        return true;
+      }
+    } catch (Exception e) {
+      log.info("authorization================  {} ",  e.getMessage());
+      throw new AuthenticationException("Unauthorized");
+    }
+//    return true;
   }
   @Override
   public void postHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,

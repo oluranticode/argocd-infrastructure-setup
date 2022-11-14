@@ -73,10 +73,10 @@ public class PaymentController {
   }
 
   @GetMapping(path = "/payment/balance",  produces = "application/json")
-  public ResponseEntity<NibssBalanceEnquiryResponse> getBalance(@RequestHeader("Authorization") String bearerToken, @RequestParam(name="accountNumber", required = true ) String accountNumber) {
-    System.out.println("bearerToken :::::" + bearerToken);
+  public ResponseEntity<NibssBalanceEnquiryResponse> getBalance(@RequestHeader("Authorization") String authorization, @RequestParam(name="accountNumber", required = true ) String accountNumber) {
+    System.out.println("bearerToken :::::" + authorization);
     log.info("Get Balance :: ");
-    NibssBalanceEnquiryResponse response = paymentService.getBalance(bearerToken, accountNumber);
+    NibssBalanceEnquiryResponse response = paymentService.getBalance(authorization, accountNumber);
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
@@ -86,9 +86,9 @@ public class PaymentController {
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
-  @GetMapping(path = "/mandate",  produces = "application/json")
-  public ResponseEntity<MandateResponse> mandate(@Valid @RequestBody MandateRequest request, BindingResult bindingResult) {
-    MandateResponse response = paymentService.mandate(request);
+  @PostMapping(path = "/mandate",  produces = "application/json")
+  public ResponseEntity<List<MandateResponse>> mandate(@RequestHeader("Authorization") String authorization, @Valid @RequestBody MandateRequest request, BindingResult bindingResult) {
+    List<MandateResponse> response = paymentService.mandate(authorization, request);
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
   
