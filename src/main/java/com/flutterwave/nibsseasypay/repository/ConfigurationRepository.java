@@ -15,6 +15,7 @@ public interface ConfigurationRepository extends
     PagingAndSortingRepository<Configuration, Long> {
 
     Configuration findOneById(Integer id);
+    Optional<Configuration> findOneByAppUser(String appUser);
     Optional<Configuration> findOneByBillerId(String billerId);
     List<Configuration> findAll();
 

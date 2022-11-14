@@ -1,11 +1,16 @@
 package com.flutterwave.nibsseasypay.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flutterwave.nibsseasypay.entity.Auth;
 import com.flutterwave.nibsseasypay.entity.Configuration;
+import com.flutterwave.nibsseasypay.entity.Mandate;
+import com.flutterwave.nibsseasypay.entity.MandateConfiguration;
 import com.flutterwave.nibsseasypay.entity.Payment;
 import com.flutterwave.nibsseasypay.entity.SourceAccount;
+import com.flutterwave.nibsseasypay.exception.AuthenticationException;
 import com.flutterwave.nibsseasypay.exception.BadRequestException;
 import com.flutterwave.nibsseasypay.exception.ConflictException;
+import com.flutterwave.nibsseasypay.exception.NotFoundException;
 import com.flutterwave.nibsseasypay.model.constant.ResponseCodeAndMessages;
 import com.flutterwave.nibsseasypay.model.request.MandateRequest;
 import com.flutterwave.nibsseasypay.model.request.charge.ChargeRequest;
@@ -14,6 +19,9 @@ import com.flutterwave.nibsseasypay.model.response.GetTokenResponse;
 import com.flutterwave.nibsseasypay.model.response.PaymentResponse;
 import com.flutterwave.nibsseasypay.nibsseastpay.constant.LogType;
 import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssGetBalanceRequest;
+import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssMandateRequest;
+import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssMandateRequestAuthData;
+import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssMandateRequestData;
 import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssNameEquiryRequest;
 import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssTransactionQueryRequest;
 import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssTransactionRequest;
@@ -23,12 +31,17 @@ import com.flutterwave.nibsseasypay.nibsseastpay.model.response.NibssBalanceEnqu
 import com.flutterwave.nibsseasypay.nibsseastpay.model.response.NibssNameEnquiryResponse;
 import com.flutterwave.nibsseasypay.nibsseastpay.model.response.NibssTransactionQueryResponse;
 import com.flutterwave.nibsseasypay.nibsseastpay.model.response.NibssTransactionResponse;
+import com.flutterwave.nibsseasypay.repository.AuthRepository;
 import com.flutterwave.nibsseasypay.repository.ConfigurationRepository;
+import com.flutterwave.nibsseasypay.repository.MandateConfigurationRepository;
+import com.flutterwave.nibsseasypay.repository.MandateRepository;
 import com.flutterwave.nibsseasypay.repository.PaymentRepository;
 import com.flutterwave.nibsseasypay.repository.SourceAccountRepository;
+import com.flutterwave.nibsseasypay.util.JwtUtil;
 import com.flutterwave.nibsseasypay.util.TimeUtil;
 import com.flutterwave.nibsseasypay.util.UUIDUtil;
 import com.google.gson.Gson;
+import io.jsonwebtoken.Claims;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +68,10 @@ public class PaymentService {
   private final ObjectMapper objectMapper;
   private final ConfigurationRepository configurationRepository;
   private final SourceAccountRepository sourceAccountRepository;
+  private final AuthRepository authRepository;
+  private final MandateConfigurationRepository mandateConfigurationRepository;
   private final List<Configuration> configurationList;
+  private final MandateRepository mandateRepository;
 
   @Autowired
   private RestTemplate restTemplate;
@@ -68,7 +84,10 @@ public class PaymentService {
       ConfigurationRepository configurationRepository,
       SaveLogService saveLogService,
       ObjectMapper objectMapper,
-      SourceAccountRepository sourceAccountRepository) {
+      SourceAccountRepository sourceAccountRepository,
+      AuthRepository authRepository,
+      MandateConfigurationRepository mandateConfigurationRepository,
+      MandateRepository mandateRepository) {
     this.gson = gson;
     this.paymentRepository = paymentRepository;
     this.saveLogService = saveLogService;
@@ -77,6 +96,9 @@ public class PaymentService {
     this.configurationRepository = configurationRepository;
     this.sourceAccountRepository = sourceAccountRepository;
     this.configurationList = configurationRepository.findAll();
+    this.authRepository = authRepository;
+    this.mandateConfigurationRepository = mandateConfigurationRepository;
+    this.mandateRepository = mandateRepository;
   }
 
 
@@ -223,12 +245,51 @@ public class PaymentService {
     return  paymentResponse;
   }
 
-  public MandateResponse mandate(MandateRequest mandateRequest) {
+  public List<MandateResponse> mandate(String authorization, MandateRequest mandateRequest) {
 
-    saveLogService.saveLog(mandateRequest.getReference(),
-        LogType.NAME_ENQUIRY.name(), gson.toJson(mandateRequest), "", "", "", "");
+    try {
+      saveLogService.saveLog(mandateRequest.getReference(),
+          LogType.MANDATE_REQUEST.name(), gson.toJson(mandateRequest), "", "", "", "");
 
+      Auth auth = getAuth(authorization);
 
+      Configuration configuration = configurationRepository.findOneByAppUser(auth.getAppUser())
+          .orElseThrow(() -> new NotFoundException("Configuration not found"));
+
+      MandateConfiguration mandateConfiguration = mandateConfigurationRepository
+          .findOneByAppUser(auth.getAppUser())
+          .orElseThrow(() -> new NotFoundException("Configuration not found"));
+
+      List<Mandate> mandate = MandateRequest
+          .buildMandate(mandateRequest.getMandateRequests(), configuration);
+      mandateRepository.saveAll(mandate);
+
+      NibssMandateRequestAuthData mandateAuthRequestData = MandateRequest
+          .buildAuthData(mandateConfiguration);
+      List<NibssMandateRequestData> mandateRequestData = MandateRequest
+          .buildMandateData(mandateRequest.getMandateRequests());
+      System.out.println(gson.toJson(mandateRequestData));
+
+      NibssMandateRequest nibssMandateRequest = NibssMandateRequest.builder()
+          .auth(mandateAuthRequestData)
+          .mandateRequests(mandateRequestData)
+          .build();
+
+      System.out.println(gson.toJson(nibssMandateRequest));
+
+      String url = configuration.getBaseUrl() + "/mandate/v1/create";
+//    https://apitest.nibss-plc.com.ng/mandate/v1/create
+//    https://apitest.nibss-plc.com.ng
+
+      String response = this.restClientProxy.mandateRequestProxy(url,
+          nibssMandateRequest, header(),
+          "POST", "application/json", configuration, ""
+          , LogType.MANDATE_REQUEST.name());
+      System.out.println(response);
+
+    }catch (Exception e) {
+
+    }
 
 
     //    String referecne = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
@@ -239,7 +300,7 @@ public class PaymentService {
 //        "POST", "application/json", configuration,
 //        nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY.name());
 //    return PaymentResponse.buildNameEnquiryResponse(response, nameEnquiryRequest, referecne);
-    return MandateResponse.builder().build();
+    return null;
   }
 
 
@@ -317,4 +378,16 @@ public class PaymentService {
     return headers;
   }
 
+  public Auth getAuth(String authCredentials) {
+    try {
+      authCredentials = authCredentials.replace("Bearer ", "");
+      Claims authClaim = JwtUtil.decodeTokenClaims(authCredentials);
+      Auth auth = authRepository.findOneByUniqueIdAndStatus(authClaim.get("id").toString(), "ACTIVE").orElseThrow(() ->
+          new AuthenticationException("Invalid Token"));
+        return auth;
+    } catch (Exception e) {
+      log.error(":::: ERROR AUTHENTICATING CALLING APP ::", e);
+      throw new AuthenticationException("Invalid Token");
+    }
+  }
 }

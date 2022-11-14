@@ -20,7 +20,7 @@ public class AppConfig extends WebMvcConfigurerAdapter {
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(appInterceptor).addPathPatterns(
-//        "/configurations",
+        "/configurations"
 //        "/charge",
 //        "/charge/status",
 //        "/charge/banks",

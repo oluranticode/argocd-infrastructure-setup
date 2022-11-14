@@ -26,6 +26,14 @@ public class MandateRequestData {
   @NotEmpty
   @NotNull
   @SafeHtml
+  private String reference;
+  @NotEmpty
+  @NotNull
+  @SafeHtml
+
+  @NotEmpty
+  @NotNull
+  @SafeHtml
   private String accountNumber;
   private String productId;
   @NotEmpty

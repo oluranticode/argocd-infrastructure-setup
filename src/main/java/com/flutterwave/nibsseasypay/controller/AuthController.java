@@ -38,10 +38,10 @@ public class AuthController {
   @PostMapping(path = "/auth", produces = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<PaymentApiResponse> auth(
       @Valid @RequestBody GetTokenRequest request, BindingResult bindingResult) {
-    log.info("Create appUser request " + gson.toJson(request));
+    log.info("Auth request " + gson.toJson(request));
     InputValidator.validate(bindingResult, request.getUsername());
     GetTokenResponse response = authService.getToken(request);
-    log.info("Create appUser response " + gsonForResponse.toJson(response));
+    log.info("Auth response " + gsonForResponse.toJson(response));
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
