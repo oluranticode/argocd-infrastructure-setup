@@ -5,18 +5,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.flutterwave.nibsseasypay.entity.Configuration;
 import com.flutterwave.nibsseasypay.entity.Mandate;
 import com.flutterwave.nibsseasypay.entity.MandateConfiguration;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssMandateRequestAuthData;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssMandateRequestData;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssMandateRequestAuthData;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssMandateRequestData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.SafeHtml;
 
 /**
  * Created by Aminu Cincin Kabunu.

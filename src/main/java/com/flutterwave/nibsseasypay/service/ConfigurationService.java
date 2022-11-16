@@ -55,6 +55,10 @@ public class ConfigurationService {
 
   public ConfigurationResponse createConfiguration(
       UpsertConfigurationRequest upsertConfigurationRequest) {
+    Boolean isExist  = configurationRepository.findOneByAppUser(upsertConfigurationRequest.getAppUser()).isPresent();
+    if(isExist) {
+      throw new ConflictException("Configuration Already exist");
+    }
     configurationRepository.save(upsertConfigurationRequest.toConfiguration(null));
     return ConfigurationResponse.builder().status(true).message("Operation successful").build();
   }
@@ -87,8 +91,8 @@ public class ConfigurationService {
 
   public AuthResponse createAppUser(AuthRequest authRequest) {
   Boolean isExist  = authRepository.findOneByUsername(authRequest.getUsername()).isPresent();
-  if(isExist) {
-    throw   new ConflictException("Uer not found");
+  if(Boolean.TRUE.equals(isExist)) {
+    throw   new ConflictException("App User already exist");
   }
     Auth auth = authRequest.toAuth(authRequest, UUIDUtil.generateType1UUID(), issuer, expiry);
     authRepository.save(auth);

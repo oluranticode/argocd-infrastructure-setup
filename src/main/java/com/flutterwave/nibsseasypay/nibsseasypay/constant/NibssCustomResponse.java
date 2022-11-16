@@ -1,4 +1,4 @@
-package com.flutterwave.nibsseasypay.nibsseastpay.constant;
+package com.flutterwave.nibsseasypay.nibsseasypay.constant;
 
 /**
  * @author Oluwafemi

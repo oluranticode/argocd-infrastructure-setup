@@ -1,4 +1,4 @@
-package com.flutterwave.nibsseasypay.nibsseastpay.model.request;
+package com.flutterwave.nibsseasypay.nibsseasypay.model.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
