@@ -1,4 +1,4 @@
-package com.flutterwave.nibsseasypay.nibsseastpay.model.request;
+package com.flutterwave.nibsseasypay.nibsseasypay.model.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.flutterwave.nibsseasypay.nibsseastpay.model.response;
+package com.flutterwave.nibsseasypay.nibsseasypay.model.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
