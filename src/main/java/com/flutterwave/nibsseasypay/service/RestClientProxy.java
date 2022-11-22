@@ -108,7 +108,7 @@ public class RestClientProxy {
 
   public <T> T sendRequestProxy(String url, Object reqBody, Class<T> responseClass,
       Map<String, String> headers, String method, String contentType,
-      Configuration configuration, String requestId, String operationType) {
+      Configuration configuration, String requestId, String operationType, String appUser) {
     if(reqBody != null)
       log.info(String.format("%s request payload to Union Bank:  %s ", requestId,  gson.toJson(reqBody)));
     String reqMediaType = contentType;
@@ -184,7 +184,7 @@ public class RestClientProxy {
       return gson.fromJson(resBody, responseClass);
     } catch (Exception e) {
       log.info(String.format("%s Request failed", requestId), e.getMessage());
-      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), e.getMessage(), "500", "ERROR","");
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), e.getMessage(), "500", "ERROR",appUser);
       throw new ProcessingException(e.getMessage());
     }
   }

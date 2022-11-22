@@ -134,7 +134,7 @@ public class PaymentService {
       saveLogService.saveLog(chargeRequest.getTransaction().getReference(),
           LogType.TRANSACTION_CHARGE.name(), gson.toJson(chargeRequest), "", "", "", sourceAccount.getAppUser());
 
-      NibssNameEnquiryResponse nameEnquiryResponse = nameEnquiryInternal(chargeRequest);
+      NibssNameEnquiryResponse nameEnquiryResponse = nameEnquiryInternal(chargeRequest, configuration, auth.getAppUser());
 
       if(nameEnquiryResponse.getCode() != null) {
         throw new BadRequestException(nameEnquiryResponse.getMessage());
@@ -152,7 +152,7 @@ public class PaymentService {
        response = this.restClientProxy.sendRequestProxy(url,
           nibssTransactionRequest, NibssTransactionResponse.class, header(),
           "POST", "application/json", configuration,
-          chargeRequest.getTransaction().getReference(), LogType.TRANSACTION_CHARGE.name());
+          chargeRequest.getTransaction().getReference(), LogType.TRANSACTION_CHARGE.name(), auth.getAppUser());
 
       System.out.println(gson.toJson(response));
 
@@ -180,9 +180,7 @@ public class PaymentService {
   }
 
 
-  public NibssNameEnquiryResponse nameEnquiryInternal(ChargeRequest nameEnquiryRequest) {
-    SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
-    Configuration configuration = configurationRepository.findOneById(1);
+  public NibssNameEnquiryResponse nameEnquiryInternal(ChargeRequest nameEnquiryRequest, Configuration configuration, String appUser) {
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
         LogType.NAME_ENQUIRY_INTERNAL.name(), gson.toJson(nameEnquiryRequest), "", "", "", configuration.getAppUser());
     String referecne = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
@@ -192,15 +190,18 @@ public class PaymentService {
     NibssNameEnquiryResponse response = this.restClientProxy.sendRequestProxy(url,
         nibssNameEquiryRequest, NibssNameEnquiryResponse.class, header(),
         "POST", "application/json", configuration,
-        nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY_INTERNAL.name());
+        nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY_INTERNAL.name(), appUser);
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
         LogType.NAME_ENQUIRY_INTERNAL.name(),"" , "gson.toJson(response)", "", "", configuration.getAppUser());
       return response;
   }
 
-  public PaymentResponse nameEnquiry(NameEnquiryRequest nameEnquiryRequest) {
-    SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
-    Configuration configuration = configurationRepository.findOneById(1);
+  public PaymentResponse nameEnquiry(String authorization, NameEnquiryRequest nameEnquiryRequest) {
+    Auth auth = getAuth(authorization);
+
+    Configuration configuration = configurationRepository.findOneByAppUser(auth.getAppUser())
+        .orElseThrow(() -> new NotFoundException("Configuration not found"));
+
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
         LogType.NAME_ENQUIRY.name(), gson.toJson(nameEnquiryRequest), "", "", "", configuration.getAppUser());
     String referecne = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
@@ -210,14 +211,17 @@ public class PaymentService {
     NibssNameEnquiryResponse response = this.restClientProxy.sendRequestProxy(url,
         nibssNameEquiryRequest, NibssNameEnquiryResponse.class, header(),
         "POST", "application/json", configuration,
-        nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY.name());
+        nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY.name(), auth.getAppUser());
 
     return PaymentResponse.buildNameEnquiryResponse(response, nameEnquiryRequest, referecne);
   }
 
-  public PaymentResponse getTransactionStatus(String transactionId) {
-    SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
-    Configuration configuration = configurationRepository.findOneById(1);
+  public PaymentResponse getTransactionStatus(String authorization, String transactionId) {
+    Auth auth = getAuth(authorization);
+
+    Configuration configuration = configurationRepository.findOneByAppUser(auth.getAppUser())
+        .orElseThrow(() -> new NotFoundException("Configuration not found"));
+
     saveLogService.saveLog(transactionId,
         LogType.TRANSACTION_QUERY.name(), "", "", "", "", configuration.getAppUser());
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/tsq";
@@ -235,7 +239,7 @@ public class PaymentService {
     NibssTransactionQueryResponse response = this.restClientProxy.sendRequestProxy(url,
         queryRequest, NibssTransactionQueryResponse.class, header(),
         "POST", "application/json", configuration,transactionId
-        , LogType.TRANSACTION_QUERY.name());
+        , LogType.TRANSACTION_QUERY.name(), auth.getAppUser());
     if(response.getResponseCode() != null && response.getResponseCode().equals(ResponseCodeAndMessages.SUCCESSFUL.code())) {
       payment.setNibssResponseCode(response.getResponseCode());
       payment.setSessionId(response.getSessionId());
@@ -316,10 +320,14 @@ public class PaymentService {
 
   public NibssBalanceEnquiryResponse getBalance(String authorization, String accountNumber) {
 
+    Auth auth = getAuth(authorization);
+
+    Configuration configuration = configurationRepository.findOneByAppUser(auth.getAppUser())
+        .orElseThrow(() -> new NotFoundException("Configuration not found"));
+
     SourceAccount sourceAccount = fineOneByAccount(accountNumber);
-    Configuration configuration = configurationRepository.findOneById(1);
     saveLogService.saveLog("",
-        LogType.GET_BALANCE.name(), "", "", "", "", "");
+        LogType.GET_BALANCE.name(), "", "", "", "", auth.getAppUser());
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/balanceenquiry";
     String reference = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
     NibssGetBalanceRequest queryRequest = NibssGetBalanceRequest.builder()
@@ -336,7 +344,7 @@ public class PaymentService {
     NibssBalanceEnquiryResponse response = this.restClientProxy.sendRequestProxy(url,
         queryRequest, NibssBalanceEnquiryResponse.class, header(),
         "POST", "application/json", configuration, reference
-        , LogType.NAME_ENQUIRY.name());
+        , LogType.GET_BALANCE.name(), auth.getAppUser());
     return PaymentResponse.buildBalanceEnquiryResponse(response);
   }
 
