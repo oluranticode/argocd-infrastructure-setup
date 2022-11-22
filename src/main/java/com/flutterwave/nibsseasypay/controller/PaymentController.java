@@ -47,10 +47,10 @@ public class PaymentController {
   }
 
   @PostMapping(path = "/payment/charge", produces = "application/json")
-  public ResponseEntity<PaymentResponse> charge(@Valid @RequestBody ChargeRequest request, BindingResult bindingResult) {
+  public ResponseEntity<PaymentResponse> charge(@RequestHeader("Authorization") String authorization, @Valid @RequestBody ChargeRequest request, BindingResult bindingResult) {
     log.info("Generate transaction request : " + gsonForResponse.toJson(request));
     InputValidator.validate(bindingResult, request.getTransaction().getReference());
-    PaymentResponse response = paymentService.charge(request);
+    PaymentResponse response = paymentService.charge(authorization, request);
     log.info("Generate transaction response " + gsonForResponse.toJson(response));
     return new ResponseEntity<>(response, HttpStatus.OK);
   }

@@ -102,13 +102,23 @@ public class PaymentService {
   }
 
 
-  public PaymentResponse charge(ChargeRequest chargeRequest) {
+  public PaymentResponse charge(String authorization, ChargeRequest chargeRequest) {
+
+    checkTransactionExist(chargeRequest.getTransaction().getReference());
+
+
     SourceAccount sourceAccount = fineOneByAccount(chargeRequest.getTransaction()
             .getSourceoffunds().getAccount().getFrom().getNumber());
 
     System.out.println(sourceAccount);
 
-    Configuration configuration = configurationRepository.findOneById(1);
+//    Configuration configuration = configurationRepository.findOneById(1);
+    Auth auth = getAuth(authorization);
+
+    Configuration configuration = configurationRepository.findOneByAppUser(auth.getAppUser())
+        .orElseThrow(() -> new NotFoundException("Configuration not found"));
+
+
     String linkingReference =
         configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil
             .RandGeneratedStr();
@@ -116,7 +126,7 @@ public class PaymentService {
     PaymentResponse paymentResponse = new PaymentResponse();
 //    try {
 
-      checkTransactionExist(chargeRequest.getTransaction().getReference());
+
 
       Payment payment =  ChargeRequest.buildPayment(chargeRequest, configuration, linkingReference, sourceAccount);
       payment = paymentRepository.save(payment);
