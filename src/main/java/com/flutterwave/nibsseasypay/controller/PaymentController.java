@@ -56,19 +56,20 @@ public class PaymentController {
   }
 
     @PostMapping(path = "/charge/nameenquiry", produces = "application/json")
-  public ResponseEntity<PaymentResponse> nameEnquiry(@Valid @RequestBody NameEnquiryRequest request, BindingResult bindingResult) {
+  public ResponseEntity<PaymentResponse> nameEnquiry(@RequestHeader("Authorization") String authorization, @Valid @RequestBody NameEnquiryRequest request, BindingResult bindingResult) {
     log.info("Generate transaction request : " + gsonForResponse.toJson(request));
     InputValidator.validate(bindingResult, request.getTransaction().getReference());
-    PaymentResponse response = paymentService.nameEnquiry(request);
+    PaymentResponse response = paymentService.nameEnquiry(authorization, request);
     log.info("Generate transaction response " + gsonForResponse.toJson(response));
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @GetMapping(path = "/payment/charge/status",  produces = "application/json")
   public ResponseEntity<PaymentResponse> getTransactionStatus(
+      @RequestHeader("Authorization") String authorization,
       @RequestParam(name="reference", required = true ) String reference) {
     log.info("Get transaction status :: " + gson.toJson(reference));
-    PaymentResponse response = paymentService.getTransactionStatus(reference);
+    PaymentResponse response = paymentService.getTransactionStatus(authorization, reference);
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
