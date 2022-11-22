@@ -25,14 +25,26 @@ public class Payment {
 
 
   @Basic
-  @Column(name = "source_institution_code")
-  public String getSourceInstitutionCode() {
-    return sourceInstitutionCode;
+  @Column(name = "institution_code")
+  public String getInstitutionCode() {
+    return institutionCode;
   }
 
-  public void setSourceInstitutionCode(String sourceInstitutionCode) {
-    this.sourceInstitutionCode = sourceInstitutionCode;
+  public void setInstitutionCode(String institutionCode) {
+    this.institutionCode = institutionCode;
   }
+
+  private String appUser;
+  @Basic
+  @Column(name = "app_user", nullable = false)
+  public String getAppUser() {
+    return appUser;
+  }
+
+  public void setAppUser(String appUser) {
+    this.appUser = appUser;
+  }
+
 
   @Basic
   @Column(name = "amount")
@@ -315,7 +327,7 @@ public class Payment {
     this.updatedAt = updatedAt;
   }
 
-  private String sourceInstitutionCode;
+  private String institutionCode;
   private String amount;
   private String beneficiaryAccountName;
   private String beneficiaryAccountNumber;

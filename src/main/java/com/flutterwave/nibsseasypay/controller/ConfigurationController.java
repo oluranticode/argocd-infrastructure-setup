@@ -2,6 +2,8 @@ package com.flutterwave.nibsseasypay.controller;
 
 import com.flutterwave.nibsseasypay.model.request.AuthRequest;
 import com.flutterwave.nibsseasypay.model.request.UpsertConfigurationRequest;
+import com.flutterwave.nibsseasypay.model.request.UpsertMandateConfigurationRequest;
+import com.flutterwave.nibsseasypay.model.request.UpsertSourceAccountRequest;
 import com.flutterwave.nibsseasypay.model.response.AuthResponse;
 import com.flutterwave.nibsseasypay.model.response.ConfigurationResponse;
 import com.flutterwave.nibsseasypay.model.response.PaymentApiResponse;
@@ -77,6 +79,46 @@ public class ConfigurationController {
     InputValidator.validate(bindingResult, request.getUsername());
     AuthResponse response = configurationService.updateAppUser(request);
     log.info("Update appUser response " + gsonForResponse.toJson(response));
+    return new ResponseEntity<>(response, HttpStatus.OK);
+  }
+
+  @PostMapping(path = "/profile/sourceaccount", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<PaymentApiResponse> addSourceAccounr(
+      @Valid @RequestBody UpsertSourceAccountRequest request, BindingResult bindingResult) {
+    log.info("Create Source Account " + gson.toJson(request));
+    InputValidator.validate(bindingResult, request.getBillerId());
+    ConfigurationResponse response = configurationService.createSourceAccount(request);
+    log.info("Create Source Account response " + gsonForResponse.toJson(response));
+    return new ResponseEntity<>(response, HttpStatus.OK);
+  }
+
+  @PutMapping(path = "/profile/sourceaccount", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<PaymentApiResponse> updateSourceAccount(
+      @Valid @RequestBody UpsertSourceAccountRequest request, BindingResult bindingResult) {
+    log.info("Update Source Account request " + gson.toJson(request));
+    InputValidator.validate(bindingResult, request.getBillerId());
+    ConfigurationResponse response = configurationService.updateSourceAccount(request);
+    log.info("Update Source Account response " + gsonForResponse.toJson(response));
+    return new ResponseEntity<>(response, HttpStatus.OK);
+  }
+
+  @PostMapping(path = "/mandate/configurations", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<PaymentApiResponse> createMandateConfiguration(
+      @Valid @RequestBody UpsertMandateConfigurationRequest request, BindingResult bindingResult) {
+    log.info("Create Mandate configuration request " + gson.toJson(request));
+    InputValidator.validate(bindingResult, request.getUsername());
+    ConfigurationResponse response = configurationService.createMandateConfiguration(request);
+    log.info("Create Mandate configuration response " + gsonForResponse.toJson(response));
+    return new ResponseEntity<>(response, HttpStatus.OK);
+  }
+
+  @PutMapping(path = "/mandate/configurations", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<PaymentApiResponse> updateMandateConfiguration(
+      @Valid @RequestBody UpsertMandateConfigurationRequest request, BindingResult bindingResult) {
+    log.info("Update Mandate configuration request " + gson.toJson(request));
+    InputValidator.validate(bindingResult, request.getUsername());
+    ConfigurationResponse response = configurationService.updateMandateConfiguration(request);
+    log.info("Update Mandate configuration response " + gsonForResponse.toJson(response));
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 }

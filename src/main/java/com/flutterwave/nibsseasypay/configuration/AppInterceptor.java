@@ -1,7 +1,9 @@
 package com.flutterwave.nibsseasypay.configuration;
 
 
+import com.flutterwave.nibsseasypay.exception.AuthenticationException;
 import com.flutterwave.nibsseasypay.service.AuthService;
+import io.jsonwebtoken.Claims;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -31,20 +33,20 @@ public class AppInterceptor implements HandlerInterceptor {
   @Override
   public boolean preHandle
       (@NotNull HttpServletRequest request,  @NotNull HttpServletResponse response, @NotNull Object handler) {
-//    try {
-//
-//      String authorization = request.getHeader("Authorization");
-//      Claims claims =  authService.getClaims(authorization, request.getRequestURI());
-//      if(claims.isEmpty()) {
-//        throw new AuthenticationException("Unauthorized");
-//      }else {
-//        return true;
-//      }
-//    } catch (Exception e) {
-//      log.info("authorization================  {} ",  e.getMessage());
-//      throw new AuthenticationException("Unauthorized");
-//    }
-    return true;
+    try {
+
+      String authorization = request.getHeader("Authorization");
+      Claims claims =  authService.getClaims(authorization, request.getRequestURI());
+      if(claims.isEmpty()) {
+        throw new AuthenticationException("Unauthorized");
+      }else {
+        return true;
+      }
+    } catch (Exception e) {
+      log.info("authorization================  {} ",  e.getMessage());
+      throw new AuthenticationException("Unauthorized");
+    }
+//    return true;
   }
   @Override
   public void postHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,

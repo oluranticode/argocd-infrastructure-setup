@@ -1,37 +1,49 @@
 package com.flutterwave.nibsseasypay.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flutterwave.nibsseasypay.entity.Auth;
 import com.flutterwave.nibsseasypay.entity.Configuration;
+import com.flutterwave.nibsseasypay.entity.Mandate;
+import com.flutterwave.nibsseasypay.entity.MandateConfiguration;
 import com.flutterwave.nibsseasypay.entity.Payment;
+import com.flutterwave.nibsseasypay.entity.SourceAccount;
+import com.flutterwave.nibsseasypay.exception.AuthenticationException;
 import com.flutterwave.nibsseasypay.exception.BadRequestException;
 import com.flutterwave.nibsseasypay.exception.ConflictException;
+import com.flutterwave.nibsseasypay.exception.NotFoundException;
 import com.flutterwave.nibsseasypay.model.constant.ResponseCodeAndMessages;
+import com.flutterwave.nibsseasypay.model.request.MandateRequest;
 import com.flutterwave.nibsseasypay.model.request.charge.ChargeRequest;
 import com.flutterwave.nibsseasypay.model.request.nameenquiry.NameEnquiryRequest;
 import com.flutterwave.nibsseasypay.model.response.GetTokenResponse;
-import com.flutterwave.nibsseasypay.model.response.PaymentOrderResponseData;
 import com.flutterwave.nibsseasypay.model.response.PaymentResponse;
-import com.flutterwave.nibsseasypay.model.response.Response;
-import com.flutterwave.nibsseasypay.model.response.TransactionResponseData;
-import com.flutterwave.nibsseasypay.nibsseastpay.constant.LogType;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssGetBalanceRequest;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssNameEquiryRequest;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssTransactionQueryRequest;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssTransactionRequest;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.response.NibssAuthResponse;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.response.NibssBalanceEnquiryResponse;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.response.NibssNameEnquiryResponse;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.response.NibssTransactionQueryResponse;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.response.NibssTransactionResponse;
-import com.flutterwave.nibsseasypay.repository.BankRepository;
+import com.flutterwave.nibsseasypay.nibsseasypay.constant.LogType;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssGetBalanceRequest;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssMandateRequest;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssMandateRequestAuthData;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssMandateRequestData;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssNameEquiryRequest;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssTransactionQueryRequest;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssTransactionRequest;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.response.MandateResponse;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.response.NibssAuthResponse;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.response.NibssBalanceEnquiryResponse;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.response.NibssNameEnquiryResponse;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.response.NibssTransactionQueryResponse;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.response.NibssTransactionResponse;
+import com.flutterwave.nibsseasypay.repository.AuthRepository;
 import com.flutterwave.nibsseasypay.repository.ConfigurationRepository;
-import com.flutterwave.nibsseasypay.repository.LogRepository;
+import com.flutterwave.nibsseasypay.repository.MandateConfigurationRepository;
+import com.flutterwave.nibsseasypay.repository.MandateRepository;
 import com.flutterwave.nibsseasypay.repository.PaymentRepository;
-import com.flutterwave.nibsseasypay.repository.TokenRepository;
+import com.flutterwave.nibsseasypay.repository.SourceAccountRepository;
+import com.flutterwave.nibsseasypay.util.JwtUtil;
 import com.flutterwave.nibsseasypay.util.TimeUtil;
 import com.flutterwave.nibsseasypay.util.UUIDUtil;
 import com.google.gson.Gson;
+import io.jsonwebtoken.Claims;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,14 +61,17 @@ import org.springframework.web.client.RestTemplate;
 public class PaymentService {
 
   private static final String MEDIA_TYPE = "application/json";
-  private final Configuration configuration;
   private final Gson gson;
   private final PaymentRepository paymentRepository;
   private final SaveLogService saveLogService;
-  private final TokenRepository tokenRepository;
-  private final BankRepository bankRepository;
   private final RestClientProxy restClientProxy;
   private final ObjectMapper objectMapper;
+  private final ConfigurationRepository configurationRepository;
+  private final SourceAccountRepository sourceAccountRepository;
+  private final AuthRepository authRepository;
+  private final MandateConfigurationRepository mandateConfigurationRepository;
+  private final List<Configuration> configurationList;
+  private final MandateRepository mandateRepository;
 
   @Autowired
   private RestTemplate restTemplate;
@@ -65,24 +80,45 @@ public class PaymentService {
   @Autowired
   public PaymentService(Gson gson,
       PaymentRepository paymentRepository,
-      LogRepository logRepository,
-      TokenRepository tokenRepository,
-      BankRepository bankRepository, RestClientProxy restClientProxy,
+      RestClientProxy restClientProxy,
       ConfigurationRepository configurationRepository,
       SaveLogService saveLogService,
-      ObjectMapper objectMapper) {
-    this.bankRepository = bankRepository;
-    this.configuration = configurationRepository.findOneById(1);
+      ObjectMapper objectMapper,
+      SourceAccountRepository sourceAccountRepository,
+      AuthRepository authRepository,
+      MandateConfigurationRepository mandateConfigurationRepository,
+      MandateRepository mandateRepository) {
     this.gson = gson;
     this.paymentRepository = paymentRepository;
     this.saveLogService = saveLogService;
-    this.tokenRepository = tokenRepository;
     this.restClientProxy = restClientProxy;
     this.objectMapper = objectMapper;
+    this.configurationRepository = configurationRepository;
+    this.sourceAccountRepository = sourceAccountRepository;
+    this.configurationList = configurationRepository.findAll();
+    this.authRepository = authRepository;
+    this.mandateConfigurationRepository = mandateConfigurationRepository;
+    this.mandateRepository = mandateRepository;
   }
 
 
-  public PaymentResponse charge(ChargeRequest chargeRequest) {
+  public PaymentResponse charge(String authorization, ChargeRequest chargeRequest) {
+
+    checkTransactionExist(chargeRequest.getTransaction().getReference());
+
+
+    SourceAccount sourceAccount = fineOneByAccount(chargeRequest.getTransaction()
+            .getSourceoffunds().getAccount().getFrom().getNumber());
+
+    System.out.println(sourceAccount);
+
+//    Configuration configuration = configurationRepository.findOneById(1);
+    Auth auth = getAuth(authorization);
+
+    Configuration configuration = configurationRepository.findOneByAppUser(auth.getAppUser())
+        .orElseThrow(() -> new NotFoundException("Configuration not found"));
+
+
     String linkingReference =
         configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil
             .RandGeneratedStr();
@@ -90,13 +126,13 @@ public class PaymentService {
     PaymentResponse paymentResponse = new PaymentResponse();
 //    try {
 
-      checkTransactionExist(chargeRequest.getTransaction().getReference());
 
-      Payment payment =  ChargeRequest.buildPayment(chargeRequest, configuration, linkingReference);
+
+      Payment payment =  ChargeRequest.buildPayment(chargeRequest, configuration, linkingReference, sourceAccount);
       payment = paymentRepository.save(payment);
 
       saveLogService.saveLog(chargeRequest.getTransaction().getReference(),
-          LogType.TRANSACTION_CHARGE.name(), gson.toJson(chargeRequest), "", "", "");
+          LogType.TRANSACTION_CHARGE.name(), gson.toJson(chargeRequest), "", "", "", sourceAccount.getAppUser());
 
       NibssNameEnquiryResponse nameEnquiryResponse = nameEnquiryInternal(chargeRequest);
 
@@ -111,7 +147,7 @@ public class PaymentService {
       payment = paymentRepository.save(payment);
 
       String url = configuration.getBaseUrl() + "/nipservice/v1/nip/fundstransfer";
-      NibssTransactionRequest nibssTransactionRequest = ChargeRequest.chargeRequest(chargeRequest, linkingReference, nameEnquiryResponse, configuration);
+      NibssTransactionRequest nibssTransactionRequest = ChargeRequest.chargeRequest(chargeRequest, linkingReference, nameEnquiryResponse, configuration, sourceAccount);
 
        response = this.restClientProxy.sendRequestProxy(url,
           nibssTransactionRequest, NibssTransactionResponse.class, header(),
@@ -126,19 +162,15 @@ public class PaymentService {
         payment.setNibssResponseCode(response.getResponseCode());
         payment.setPaymentReference(response.getPaymentReference());
         payment.setResponseMessage(response.getNarration());
-        paymentResponse =  PaymentResponse.buildPaymentResponse(response, chargeRequest, linkingReference);
-        payment.setResponseCode(paymentResponse.getResponse().getCode());
-        payment.setResponseMessage(paymentResponse.getResponse().getMessage());
-        paymentRepository.save(payment);
       } else {
         payment.setNibssErrorCode(response.getCode());
         payment.setNibssErrorTimestamp(response.getTimestamp());
         payment.setNibssErrorMessage(response.getMessage());
-        paymentResponse =  PaymentResponse.buildPaymentResponse(response, chargeRequest, linkingReference);
-        payment.setResponseCode(paymentResponse.getResponse().getCode());
-        payment.setResponseMessage(paymentResponse.getResponse().getMessage());
-        paymentRepository.save(payment);
       }
+    paymentResponse =  PaymentResponse.buildPaymentResponse(response, chargeRequest, linkingReference);
+    payment.setResponseCode(paymentResponse.getResponse().getCode());
+    payment.setResponseMessage(paymentResponse.getResponse().getMessage());
+    paymentRepository.save(payment);
 //    } catch (Exception e) {
 //      e.printStackTrace();
 //    }
@@ -149,8 +181,10 @@ public class PaymentService {
 
 
   public NibssNameEnquiryResponse nameEnquiryInternal(ChargeRequest nameEnquiryRequest) {
+    SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
+    Configuration configuration = configurationRepository.findOneById(1);
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
-        LogType.NAME_ENQUIRY_INTERNAL.name(), gson.toJson(nameEnquiryRequest), "", "", "");
+        LogType.NAME_ENQUIRY_INTERNAL.name(), gson.toJson(nameEnquiryRequest), "", "", "", configuration.getAppUser());
     String referecne = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/nameenquiry";
     NibssNameEquiryRequest nibssNameEquiryRequest = NameEnquiryRequest.nameChargeEnquiryRequest(nameEnquiryRequest, referecne);
@@ -160,13 +194,15 @@ public class PaymentService {
         "POST", "application/json", configuration,
         nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY_INTERNAL.name());
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
-        LogType.NAME_ENQUIRY_INTERNAL.name(),"" , "gson.toJson(response)", "", "");
+        LogType.NAME_ENQUIRY_INTERNAL.name(),"" , "gson.toJson(response)", "", "", configuration.getAppUser());
       return response;
   }
 
   public PaymentResponse nameEnquiry(NameEnquiryRequest nameEnquiryRequest) {
+    SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
+    Configuration configuration = configurationRepository.findOneById(1);
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
-        LogType.NAME_ENQUIRY.name(), gson.toJson(nameEnquiryRequest), "", "", "");
+        LogType.NAME_ENQUIRY.name(), gson.toJson(nameEnquiryRequest), "", "", "", configuration.getAppUser());
     String referecne = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/nameenquiry";
     NibssNameEquiryRequest nibssNameEquiryRequest = NameEnquiryRequest.nameEnquiryRequest(nameEnquiryRequest, referecne);
@@ -180,9 +216,10 @@ public class PaymentService {
   }
 
   public PaymentResponse getTransactionStatus(String transactionId) {
-
+    SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
+    Configuration configuration = configurationRepository.findOneById(1);
     saveLogService.saveLog(transactionId,
-        LogType.TRANSACTION_QUERY.name(), "", "", "", "");
+        LogType.TRANSACTION_QUERY.name(), "", "", "", "", configuration.getAppUser());
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/tsq";
     PaymentResponse paymentResponse = new PaymentResponse();
     Payment payment = verifyTransactionExist(transactionId);
@@ -218,20 +255,81 @@ public class PaymentService {
     return  paymentResponse;
   }
 
+  public List<MandateResponse> mandate(String authorization, MandateRequest mandateRequest) {
 
-  public NibssBalanceEnquiryResponse getBalance() {
+    try {
+      saveLogService.saveLog(mandateRequest.getReference(),
+          LogType.MANDATE_REQUEST.name(), gson.toJson(mandateRequest), "", "", "", "");
+
+      Auth auth = getAuth(authorization);
+
+      Configuration configuration = configurationRepository.findOneByAppUser(auth.getAppUser())
+          .orElseThrow(() -> new NotFoundException("Configuration not found"));
+
+      MandateConfiguration mandateConfiguration = mandateConfigurationRepository
+          .findOneByAppUser(auth.getAppUser())
+          .orElseThrow(() -> new NotFoundException("Configuration not found"));
+
+      List<Mandate> mandate = MandateRequest
+          .buildMandate(mandateRequest.getMandateRequests(), configuration);
+      mandateRepository.saveAll(mandate);
+
+      NibssMandateRequestAuthData mandateAuthRequestData = MandateRequest
+          .buildAuthData(mandateConfiguration);
+      List<NibssMandateRequestData> mandateRequestData = MandateRequest
+          .buildMandateData(mandateRequest.getMandateRequests());
+      System.out.println(gson.toJson(mandateRequestData));
+
+      NibssMandateRequest nibssMandateRequest = NibssMandateRequest.builder()
+          .auth(mandateAuthRequestData)
+          .mandateRequests(mandateRequestData)
+          .build();
+
+      System.out.println(gson.toJson(nibssMandateRequest));
+
+      String url = configuration.getBaseUrl() + "/mandate/v1/create";
+//    https://apitest.nibss-plc.com.ng/mandate/v1/create
+//    https://apitest.nibss-plc.com.ng
+
+      String response = this.restClientProxy.mandateRequestProxy(url,
+          nibssMandateRequest, header(),
+          "POST", "application/json", configuration, ""
+          , LogType.MANDATE_REQUEST.name());
+      System.out.println(response);
+
+    }catch (Exception e) {
+
+    }
+
+
+    //    String referecne = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
+//    String url = configuration.getBaseUrl() + "/nipservice/v1/nip/nameenquiry";
+//    NibssNameEquiryRequest nibssNameEquiryRequest = NameEnquiryRequest.nameEnquiryRequest(nameEnquiryRequest, referecne);
+//    NibssNameEnquiryResponse response = this.restClientProxy.sendRequestProxy(url,
+//        nibssNameEquiryRequest, NibssNameEnquiryResponse.class, header(),
+//        "POST", "application/json", configuration,
+//        nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY.name());
+//    return PaymentResponse.buildNameEnquiryResponse(response, nameEnquiryRequest, referecne);
+    return null;
+  }
+
+
+  public NibssBalanceEnquiryResponse getBalance(String authorization, String accountNumber) {
+
+    SourceAccount sourceAccount = fineOneByAccount(accountNumber);
+    Configuration configuration = configurationRepository.findOneById(1);
     saveLogService.saveLog("",
-        LogType.GET_BALANCE.name(), "", "", "", "");
+        LogType.GET_BALANCE.name(), "", "", "", "", "");
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/balanceenquiry";
     String reference = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
     NibssGetBalanceRequest queryRequest = NibssGetBalanceRequest.builder()
-        .authorizationCode(configuration.getAuthorizationCode())
+        .authorizationCode(sourceAccount.getAuthorizationCode())
         .billerId(configuration.getBillerId())
         .channelCode("1")
-        .destinationInstitutionCode(configuration.getSourceInstitutionCode())
-        .targetAccountName(configuration.getSourceAccountName())
-        .targetAccountNumber(configuration.getSourceAccountNumber())
-        .targetBankVerificationNumber(configuration.getSourceBvn())
+        .destinationInstitutionCode(sourceAccount.getSourceInstitutionCode())
+        .targetAccountName(sourceAccount.getSourceAccountName())
+        .targetAccountNumber(sourceAccount.getSourceAccountNumber())
+        .targetBankVerificationNumber(sourceAccount.getSourceBvn())
         .transactionId(reference)
         .build();
 
@@ -252,6 +350,8 @@ public class PaymentService {
 
 
   public GetTokenResponse getToken() {
+    SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
+    Configuration configuration = configurationRepository.findOneById(1);
     String url = configuration.getBaseUrl() + "/reset";
     NibssAuthResponse nibssAuthResponse = this.restClientProxy.getTokenRequestProxy(url, configuration, NibssAuthResponse.class);
     return  GetTokenResponse.builder()
@@ -260,6 +360,19 @@ public class PaymentService {
         .expiresIn(nibssAuthResponse.getExpiresIn())
         .expires(nibssAuthResponse.getExpiresIn())
         .build();
+  }
+
+  private SourceAccount fineOneByAccount(String accountNumber) {
+    return sourceAccountRepository.findOneBySourceAccountNumber(accountNumber).orElseThrow(() ->
+        new BadRequestException("Source Account number (" + accountNumber + ") does not exists")
+    );
+  }
+
+
+  private Configuration fineOneByBillerId(String billerId) {
+    return configurationRepository.findOneByBillerId(billerId).orElseThrow(() ->
+        new BadRequestException("Source Account number (" + billerId + ") does not exists")
+    );
   }
 
   private Payment verifyTransactionExist(String reference) {
@@ -275,4 +388,16 @@ public class PaymentService {
     return headers;
   }
 
+  public Auth getAuth(String authCredentials) {
+    try {
+      authCredentials = authCredentials.replace("Bearer ", "");
+      Claims authClaim = JwtUtil.decodeTokenClaims(authCredentials);
+      Auth auth = authRepository.findOneByUniqueIdAndStatus(authClaim.get("id").toString(), "ACTIVE").orElseThrow(() ->
+          new AuthenticationException("Invalid Token"));
+        return auth;
+    } catch (Exception e) {
+      log.error(":::: ERROR AUTHENTICATING CALLING APP ::", e);
+      throw new AuthenticationException("Invalid Token");
+    }
+  }
 }

@@ -1,9 +1,7 @@
 package com.flutterwave.nibsseasypay.model.request.nameenquiry;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.flutterwave.nibsseasypay.model.request.charge.ChargeRequest;
-import com.flutterwave.nibsseasypay.nibsseastpay.model.request.NibssNameEquiryRequest;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssNameEquiryRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;

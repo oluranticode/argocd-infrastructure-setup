@@ -66,7 +66,7 @@ deploy_dev_app:
   environment:
     name: development
   script:
-    - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/dev-cluster/nibss-easy-pay-api-dev.yaml
+    - sed -i "s/$CI_PROJECT_NAME:.*/$CI_PROJECT_NAME:$BUILD_JOB_ID/gI" $manifest_dir/dev-cluster/acquire-cluster-dev/nibss-easy-pay-api-dev.yaml
   only:
     - dev
   

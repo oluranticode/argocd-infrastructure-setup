@@ -180,11 +180,94 @@ public class RestClientProxy {
       log.info(String.format("%s response payload from Union Bank %s ", requestId, gson.toJson(resBody)));
       log.info(String.format(" %s response HTTP status code from Union Bank ", requestId),
           response.code());
-      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), gson.toJson(resBody), String.valueOf(response.code()), String.valueOf(response.code()));
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), gson.toJson(resBody), String.valueOf(response.code()), String.valueOf(response.code()), "");
       return gson.fromJson(resBody, responseClass);
     } catch (Exception e) {
       log.info(String.format("%s Request failed", requestId), e.getMessage());
-      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), e.getMessage(), "500", "ERROR");
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), e.getMessage(), "500", "ERROR","");
+      throw new ProcessingException(e.getMessage());
+    }
+  }
+
+  public String mandateRequestProxy(String url, Object reqBody,
+      Map<String, String> headers, String method, String contentType,
+      Configuration configuration, String requestId, String operationType) {
+    if(reqBody != null)
+      log.info(String.format("%s request payload to Union Bank:  %s ", requestId,  gson.toJson(reqBody)));
+    String reqMediaType = contentType;
+    String proxyIP = configuration.getProxyUrl();
+    int proxyPort = configuration.getProxyPort();
+    final String username = configuration.getProxyUsername();
+    String password = configuration.getProxyPassword();
+    RequestBody body = null;
+    Proxy proxy = new Proxy(HTTP, new InetSocketAddress(proxyIP, proxyPort));
+    final TrustManager[] trustAllCerts = new TrustManager[]{
+        new X509TrustManager() {
+          @Override
+          public void checkClientTrusted(java.security.cert.X509Certificate[] chain,
+              String authType) throws CertificateException {
+          }
+
+          @Override
+          public void checkServerTrusted(java.security.cert.X509Certificate[] chain,
+              String authType) throws CertificateException {
+          }
+
+          @Override
+          public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+            return new java.security.cert.X509Certificate[]{};
+          }
+        }
+    };
+
+    try {
+
+      final SSLContext sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+      final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+      Authenticator proxyAuthenticator = new Authenticator() {
+        @Override
+        public Request authenticate(Route route, Response response) throws IOException {
+          String credential = Credentials.basic(username, password);
+          return response.request().newBuilder()
+              .header("Proxy-Authorization", credential)
+              .build();
+        }
+      };
+      OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+      clientBuilder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
+      clientBuilder.hostnameVerifier(new HostnameVerifier() {
+        @Override
+        public boolean verify(String hostname, SSLSession session) {
+          return true;
+        }
+      });
+      OkHttpClient client = clientBuilder.proxy(proxy).proxyAuthenticator(proxyAuthenticator)
+          .build();
+      MediaType mediaType = MediaType.parse(reqMediaType);
+      if ("POST".equalsIgnoreCase(method)) {
+        body = RequestBody.create(mediaType, objectMapper.writeValueAsString(reqBody));
+      }
+
+      Builder builder = new Builder()
+          .url(url)
+          .method(method.toUpperCase(), body);
+      if (Objects.nonNull(headers)) {
+        headers.forEach((key, value) -> {
+          builder.addHeader(key, value);
+        });
+      }
+      Request request = builder.build();
+      Response response = client.newCall(request).execute();
+      String resBody = response.body().string();
+      log.info(String.format("%s response payload from NIBSS EASY PAY %s ", requestId, gson.toJson(resBody)));
+      log.info(String.format(" %s response HTTP status code from  NIBSS EASY PAY ", requestId),
+          response.code());
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), gson.toJson(resBody), String.valueOf(response.code()), String.valueOf(response.code()), "");
+      return resBody;
+    } catch (Exception e) {
+      log.info(String.format("%s Request failed", requestId), e.getMessage());
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), e.getMessage(), "500", "ERROR", "");
       throw new ProcessingException(e.getMessage());
     }
   }
@@ -269,7 +352,7 @@ public class RestClientProxy {
       System.out.println("response HTTP status code from nibss : " + response.code());
       System.out.println("response payload from nibss : " + resBody);
 
-      saveLogService.saveLog(reference, reqBody, resBody, operationType, String.valueOf(response.code()), "");
+      saveLogService.saveLog(reference, reqBody, resBody, operationType, String.valueOf(response.code()), "", "");
       if (reqMediaType.equals("application/json")) {
         return objectMapper.readValue(resBody, responseClass);
       }
@@ -350,7 +433,7 @@ public class RestClientProxy {
       return gson.fromJson(resBody, responseClass);
     } catch (Exception e) {
       log.info(String.format("%s Request failed %s", configuration.getClientId(), e.getMessage()));
-      saveLogService.saveLog(configuration.getClientId(), "GET_TOKEN" + "_LOG", "", e.getMessage(), "500", "ERROR");
+      saveLogService.saveLog(configuration.getClientId(), "GET_TOKEN" + "_LOG", "", e.getMessage(), "500", "ERROR", "");
       throw new ProcessingException(e.getMessage());
     }
   }
