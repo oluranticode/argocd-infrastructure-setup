@@ -49,7 +49,7 @@ public class ChargeRequest {
            .originatorKYCLevel(sourceAccount.getSourceKycLevel())
            .originatorNarration(chargeRequest.getTransaction().getNarration())
            .paymentReference(chargeRequest.getTransaction().getReference())
-           .SourceInstitutionCode(Integer.valueOf(sourceAccount.getSourceInstitutionCode()))
+           .SourceInstitutionCode(sourceAccount.getSourceInstitutionCode())
            .transactionId(linkingReference)
            .transactionLocation(chargeRequest.getTransactionLocation())
            .build();

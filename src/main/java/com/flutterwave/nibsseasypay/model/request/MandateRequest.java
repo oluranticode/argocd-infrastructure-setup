@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.flutterwave.nibsseasypay.entity.Configuration;
 import com.flutterwave.nibsseasypay.entity.Mandate;
 import com.flutterwave.nibsseasypay.entity.MandateConfiguration;
+import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NIbssMandateFileRequest;
 import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssMandateRequestAuthData;
 import com.flutterwave.nibsseasypay.nibsseasypay.model.request.NibssMandateRequestData;
 import java.util.ArrayList;
@@ -48,20 +49,23 @@ public class MandateRequest {
         NibssMandateRequestData mandateRequestData = new NibssMandateRequestData();
         mandateRequestData.setAccountNumber(data.getAccountNumber());
         mandateRequestData.setProductId(data.getProductId());
-        mandateRequestData.setPayeeName(data.getPayeeName());
+//        mandateRequestData.setPayeeName(data.getPayeeName());
         mandateRequestData.setBankCode(data.getBankCode());
-        mandateRequestData.setPayeeAddress(data.getPayeeAddress());
+//        mandateRequestData.setPayeeAddress(data.getPayeeAddress());
         mandateRequestData.setAccountName(data.getAccountName());
         mandateRequestData.setAmount(data.getAmount());
         mandateRequestData.setPayerName(data.getPayerName());
+        mandateRequestData.setPayerAddress(data.getPayerAddress());
         mandateRequestData.setPhoneNumber(data.getPhoneNumber());
         mandateRequestData.setNarration(data.getNarration());
         mandateRequestData.setEmailAddress(data.getEmailAddress());
         mandateRequestData.setSubscriberCode(data.getSubscriberCode());
         mandateRequestData.setStartDate(data.getStartDate());
         mandateRequestData.setEndDate(data.getEndDate());
-        mandateRequestData.setFileExtension(data.getFileExtension());
-        mandateRequestData.setFileBase64EncodedString(data.getFileBase64EncodedString());
+        mandateRequestData.setMandateFile(NIbssMandateFileRequest.builder()
+            .fileExtension(data.getFileExtension())
+            .fileBase64EncodedString(data.getFileBase64EncodedString())
+            .build());
         return mandateRequestData;
       }).collect(Collectors.toList());
     }
@@ -75,9 +79,9 @@ public class MandateRequest {
      mandate.setBillerId(configuration.getBillerId());
      mandate.setProductId(data.getProductId());
      mandate.setBankCode(data.getBankCode());
-     mandate.setPayeeName(data.getPayeeName());
+     mandate.setPayeeName("");
      mandate.setPayerAddress(data.getPayerAddress());
-     mandate.setPayeeAddress(data.getPayeeAddress());
+     mandate.setPayeeAddress("");
      mandate.setAccountName(data.getAccountName());
      mandate.setAmount(data.getAmount());
      mandate.setPayerName(data.getPayerName());

@@ -50,6 +50,30 @@ public class UpsertMandateConfigurationRequest {
   @NotEmpty
   private String password;
 
+  @Expose
+  @SafeHtml
+  @NotNull
+  @NotEmpty
+  private String clientId;
+
+  @SafeHtml
+  @NotNull
+  @NotEmpty
+  private String clientSecret;
+
+  @Expose
+  @SafeHtml
+  @NotNull
+  @NotEmpty
+  private String grantType;
+
+
+  @Expose
+  @SafeHtml
+  @NotNull
+  @NotEmpty
+  private String scope;
+
 
 
   public MandateConfiguration toConfiguration(MandateConfiguration mandateConfiguration) {
@@ -61,6 +85,10 @@ public class UpsertMandateConfigurationRequest {
     mandateConfiguration.setApiKey(apiKey);
     mandateConfiguration.setPassword(password);
     mandateConfiguration.setUsername(username);
+    mandateConfiguration.setClientSecret(clientSecret);
+    mandateConfiguration.setClientId(clientId);
+    mandateConfiguration.setGrantType(grantType);
+    mandateConfiguration.setScope(scope);
     return mandateConfiguration;
   }
 

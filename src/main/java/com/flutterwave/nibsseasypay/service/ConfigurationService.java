@@ -75,14 +75,15 @@ public class ConfigurationService {
 
   public ConfigurationResponse createMandateConfiguration(
       UpsertMandateConfigurationRequest upsertConfigurationRequest) {
-    checkMandateConfigurationExist(upsertConfigurationRequest.getUsername());
+    checkMandateConfigurationExist(upsertConfigurationRequest.getAppUser());
     mandateConfigurationRepository.save(upsertConfigurationRequest.toConfiguration(null));
     return ConfigurationResponse.builder().status(true).message("Operation successful").build();
   }
 
   public ConfigurationResponse updateMandateConfiguration(
       UpsertMandateConfigurationRequest upsertMandateConfigurationRequest) {
-    MandateConfiguration mandateConfigurationRequest = fineMandateConfiguration(upsertMandateConfigurationRequest.getUsername());
+
+    MandateConfiguration mandateConfigurationRequest = fineMandateConfiguration(upsertMandateConfigurationRequest.getAppUser());
     mandateConfigurationRepository.save(
         upsertMandateConfigurationRequest
         .toConfiguration(mandateConfigurationRequest));
@@ -140,16 +141,16 @@ public class ConfigurationService {
     }
   }
 
-  private MandateConfiguration fineMandateConfiguration(String username) {
-    return mandateConfigurationRepository.findOneByUsername(username).orElseThrow(() ->
+  private MandateConfiguration fineMandateConfiguration(String appUser) {
+    return mandateConfigurationRepository.findOneByAppUser(appUser).orElseThrow(() ->
         new BadRequestException("Mandate configuration does not exists")
     );
   }
 
-  private void checkMandateConfigurationExist(String username) {
-    boolean savedPayment = mandateConfigurationRepository.findOneByUsername(username).isPresent();
+  private void checkMandateConfigurationExist(String appUser) {
+    boolean savedPayment = mandateConfigurationRepository.findOneByAppUser(appUser).isPresent();
     if (savedPayment) {
-      throw new ConflictException("Mandate configuration already exisr already exists");
+      throw new ConflictException("Mandate configuration already exist");
     }
   }
 
