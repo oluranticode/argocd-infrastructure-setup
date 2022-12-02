@@ -28,6 +28,7 @@ public class Configuration {
   private String grantType;
   private String clientSecret;
   private String clientId;
+  private String scope;
 
   private String appUser;
   @Column(name = "app_user", nullable = false)
@@ -103,7 +104,6 @@ public class Configuration {
     BillerId = billerId;
   }
 
-  private String scope;
   private String BillerId;
   private String proxyUsername;
   private String proxyPassword;

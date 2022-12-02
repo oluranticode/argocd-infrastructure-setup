@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class NibssTransactionRequest {
-  private Integer SourceInstitutionCode;
+  private String SourceInstitutionCode;
   private String amount;
   private String beneficiaryAccountName;
   private String beneficiaryAccountNumber;
