@@ -150,7 +150,7 @@ public class PaymentService {
       NibssTransactionRequest nibssTransactionRequest = ChargeRequest.chargeRequest(chargeRequest, linkingReference, nameEnquiryResponse, configuration, sourceAccount);
 
        response = this.restClientProxy.sendRequestProxy(url,
-          nibssTransactionRequest, NibssTransactionResponse.class, header(),
+          nibssTransactionRequest, NibssTransactionResponse.class, header(auth.getAppUser()),
           "POST", "application/json", configuration,
           chargeRequest.getTransaction().getReference(), LogType.TRANSACTION_CHARGE.name(), auth.getAppUser());
 
@@ -188,7 +188,7 @@ public class PaymentService {
     NibssNameEquiryRequest nibssNameEquiryRequest = NameEnquiryRequest.nameChargeEnquiryRequest(nameEnquiryRequest, referecne);
 
     NibssNameEnquiryResponse response = this.restClientProxy.sendRequestProxy(url,
-        nibssNameEquiryRequest, NibssNameEnquiryResponse.class, header(),
+        nibssNameEquiryRequest, NibssNameEnquiryResponse.class, header(appUser),
         "POST", "application/json", configuration,
         nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY_INTERNAL.name(), appUser);
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
@@ -209,7 +209,7 @@ public class PaymentService {
     NibssNameEquiryRequest nibssNameEquiryRequest = NameEnquiryRequest.nameEnquiryRequest(nameEnquiryRequest, referecne);
 
     NibssNameEnquiryResponse response = this.restClientProxy.sendRequestProxy(url,
-        nibssNameEquiryRequest, NibssNameEnquiryResponse.class, header(),
+        nibssNameEquiryRequest, NibssNameEnquiryResponse.class, header(auth.getAppUser()),
         "POST", "application/json", configuration,
         nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY.name(), auth.getAppUser());
 
@@ -237,7 +237,7 @@ public class PaymentService {
         .build();
 
     NibssTransactionQueryResponse response = this.restClientProxy.sendRequestProxy(url,
-        queryRequest, NibssTransactionQueryResponse.class, header(),
+        queryRequest, NibssTransactionQueryResponse.class, header(auth.getAppUser()),
         "POST", "application/json", configuration,transactionId
         , LogType.TRANSACTION_QUERY.name(), auth.getAppUser());
     if(response.getResponseCode() != null && response.getResponseCode().equals(ResponseCodeAndMessages.SUCCESSFUL.code())) {
@@ -262,10 +262,11 @@ public class PaymentService {
   public List<MandateResponse> mandate(String authorization, MandateRequest mandateRequest) {
 
     try {
-      saveLogService.saveLog(mandateRequest.getReference(),
-          LogType.MANDATE_REQUEST.name(), gson.toJson(mandateRequest), "", "", "", "");
-
       Auth auth = getAuth(authorization);
+
+      saveLogService.saveLog(mandateRequest.getReference(),
+          LogType.MANDATE_REQUEST.name(), gson.toJson(mandateRequest), "", "", "",
+          auth.getAppUser());
 
       Configuration configuration = configurationRepository.findOneByAppUser(auth.getAppUser())
           .orElseThrow(() -> new NotFoundException("Configuration not found"));
@@ -289,17 +290,26 @@ public class PaymentService {
           .mandateRequests(mandateRequestData)
           .build();
 
-      System.out.println(gson.toJson(nibssMandateRequest));
+
+
+      saveLogService.saveLog(mandateRequest.getReference(),
+          LogType.MANDATE_REQUEST.name(), gson.toJson(mandateRequest), "", "", "",
+          auth.getAppUser());
 
       String url = configuration.getBaseUrl() + "/mandate/v1/create";
 //    https://apitest.nibss-plc.com.ng/mandate/v1/create
 //    https://apitest.nibss-plc.com.ng
 
       String response = this.restClientProxy.mandateRequestProxy(url,
-          nibssMandateRequest, header(),
+          nibssMandateRequest, mandateHeader(auth.getAppUser(), configuration),
           "POST", "application/json", configuration, ""
           , LogType.MANDATE_REQUEST.name());
-      System.out.println(response);
+
+//
+//      saveLogService.saveLog(mandateRequest.getReference(),
+//          LogType.MANDATE_REQUEST.name(), gson.toJson(response), "", "", "",
+//          auth.getAppUser());
+      System.out.println("MANDATE_REQUEST ====  " + response);
 
     }catch (Exception e) {
 
@@ -342,7 +352,7 @@ public class PaymentService {
         .build();
 
     NibssBalanceEnquiryResponse response = this.restClientProxy.sendRequestProxy(url,
-        queryRequest, NibssBalanceEnquiryResponse.class, header(),
+        queryRequest, NibssBalanceEnquiryResponse.class, header(auth.getAppUser()),
         "POST", "application/json", configuration, reference
         , LogType.GET_BALANCE.name(), auth.getAppUser());
     return PaymentResponse.buildBalanceEnquiryResponse(response);
@@ -357,10 +367,30 @@ public class PaymentService {
 
 
 
-  public GetTokenResponse getToken() {
-    SourceAccount sourceAccount = sourceAccountRepository.findOneById(1);
-    Configuration configuration = configurationRepository.findOneById(1);
+  public GetTokenResponse getToken(String appUser) {
+//    Configuration configuration = configurationRepository.findOneByAppUser(appUser);
+    Configuration configuration = configurationRepository.findOneByAppUser(appUser)
+        .orElseThrow(() -> new NotFoundException("Configuration not found"));
     String url = configuration.getBaseUrl() + "/reset";
+    NibssAuthResponse nibssAuthResponse = this.restClientProxy.getTokenRequestProxy(url, configuration, NibssAuthResponse.class);
+    return  GetTokenResponse.builder()
+        .token(nibssAuthResponse.getAccessToken())
+        .tokenType(nibssAuthResponse.getTokenType())
+        .expiresIn(nibssAuthResponse.getExpiresIn())
+        .expires(nibssAuthResponse.getExpiresIn())
+        .build();
+  }
+
+  public GetTokenResponse getMandateToken(String appUser, Configuration configuration) {
+    MandateConfiguration configuration1 = mandateConfigurationRepository.findOneByAppUser(appUser)
+        .orElseThrow(() -> new NotFoundException("Configuration not found"));
+    configuration.setClientId(configuration1.getClientId());
+    configuration.setClientSecret(configuration1.getClientSecret());
+    configuration.setScope(configuration1.getScope());
+    configuration.setGrantType(configuration1.getGrantType());
+    String url = configuration.getBaseUrl() + "/reset";
+
+    System.out.println("configuration1 "+ gson.toJson(configuration1));
     NibssAuthResponse nibssAuthResponse = this.restClientProxy.getTokenRequestProxy(url, configuration, NibssAuthResponse.class);
     return  GetTokenResponse.builder()
         .token(nibssAuthResponse.getAccessToken())
@@ -389,8 +419,17 @@ public class PaymentService {
     );
   }
 
-  private Map<String, String> header() {
-    GetTokenResponse  response = getToken();
+  private Map<String, String>  mandateHeader(String appUser, Configuration configuration) {
+    GetTokenResponse  response = getMandateToken(appUser, configuration);
+    System.out.println(gson.toJson(response));
+    System.out.println("GetTokenResponse "+ gson.toJson(response));
+    Map<String, String> headers = new HashMap<>(1);
+    headers.put("Authorization", "Bearer " + response.getToken());
+    return headers;
+  }
+
+  private Map<String, String> header(String appUser) {
+    GetTokenResponse  response = getToken(appUser);
     Map<String, String> headers = new HashMap<>(1);
     headers.put("Authorization", "Bearer " + response.getToken());
     return headers;

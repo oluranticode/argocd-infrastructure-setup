@@ -20,22 +20,20 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NibssMandateRequestData {
-  private String accountNumber;
-  private String productId;
-  private String bankCode;
-  private String payerName;
-  private String payerAddress;
-  private String accountName;
-  private String amount;
-  private String payeeName;
-  private String narration;
-  private String payeeAddress;
-  private String phoneNumber;
-  private String emailAddress;
-  private String subscriberCode;
   private String startDate;
   private String endDate;
-  private String fileExtension;
-  private String fileBase64EncodedString;
+  private String accountNumber;
+  private NIbssMandateFileRequest mandateFile;
+  private String payerAddress;
+  private int frequency;
+  private String emailAddress;
+  private String narration;
+  private String bankCode;
+  private String payerName;
+  private String accountName;
+  private String amount;
+  private String phoneNumber;
+  private String subscriberCode;
+  private String productId;
 
 }

@@ -71,6 +71,7 @@ public class Log {
   }
   @Basic
   @Column(name = "request_body", length = 10240)
+
   @Convert(converter = MaskLogSensitiveData.class)
   public String getRequestBody() {
     return requestBody;

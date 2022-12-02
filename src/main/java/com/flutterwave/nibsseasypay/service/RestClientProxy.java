@@ -110,7 +110,7 @@ public class RestClientProxy {
       Map<String, String> headers, String method, String contentType,
       Configuration configuration, String requestId, String operationType, String appUser) {
     if(reqBody != null)
-      log.info(String.format("%s request payload to Union Bank:  %s ", requestId,  gson.toJson(reqBody)));
+      log.info(String.format("%s request payload to NIBSS EASY PAY:  %s ", requestId,  gson.toJson(reqBody)));
     String reqMediaType = contentType;
     String proxyIP = configuration.getProxyUrl();
     int proxyPort = configuration.getProxyPort();
@@ -177,8 +177,8 @@ public class RestClientProxy {
       Request request = builder.build();
       Response response = client.newCall(request).execute();
       String resBody = response.body().string();
-      log.info(String.format("%s response payload from Union Bank %s ", requestId, gson.toJson(resBody)));
-      log.info(String.format(" %s response HTTP status code from Union Bank ", requestId),
+      log.info(String.format("%s response payload from NIBSS EASY PAY %s ", requestId, gson.toJson(resBody)));
+      log.info(String.format(" %s response HTTP status code from NIBSS EASY PAY ", requestId),
           response.code());
       saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), gson.toJson(resBody), String.valueOf(response.code()), String.valueOf(response.code()), "");
       return gson.fromJson(resBody, responseClass);
@@ -193,7 +193,7 @@ public class RestClientProxy {
       Map<String, String> headers, String method, String contentType,
       Configuration configuration, String requestId, String operationType) {
     if(reqBody != null)
-      log.info(String.format("%s request payload to Union Bank:  %s ", requestId,  gson.toJson(reqBody)));
+      log.info(String.format("%s request payload to NIBSS EASY PAY:  %s ", requestId,  gson.toJson(reqBody)));
     String reqMediaType = contentType;
     String proxyIP = configuration.getProxyUrl();
     int proxyPort = configuration.getProxyPort();
@@ -427,8 +427,8 @@ public class RestClientProxy {
       Call call = client.newCall(request);
       Response response = call.execute();
       String resBody = response.body().string();
-      log.info(String.format("%s response payload from Union Bank %s ", configuration.getClientId(), gson.toJson(resBody)));
-      log.info(String.format("%s %s  response HTTP status code from Union Bank ", configuration.getClientId(),
+      log.info(String.format("%s response payload from NIBSS EASY PAY %s ", configuration.getClientId(), gson.toJson(resBody)));
+      log.info(String.format("%s %s  response HTTP status code from NIBSS EASY PAY ", configuration.getClientId(),
           response.code()));
       return gson.fromJson(resBody, responseClass);
     } catch (Exception e) {

@@ -82,14 +82,19 @@ public class PaymentController {
   }
 
   @GetMapping(path = "/charge/auth",  produces = "application/json")
-  public ResponseEntity<GetTokenResponse> getToken() {
-    GetTokenResponse response = paymentService.getToken();
+  public ResponseEntity<GetTokenResponse> getToken(@RequestParam(name="appUser", required = true ) String appUser) {
+    GetTokenResponse response = paymentService.getToken(appUser);
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @PostMapping(path = "/mandate",  produces = "application/json")
   public ResponseEntity<List<MandateResponse>> mandate(@RequestHeader("Authorization") String authorization, @Valid @RequestBody MandateRequest request, BindingResult bindingResult) {
+    log.info("Mandate request :: " + request.getReference());
+    log.info("Mandate request :: " + gson.toJson(request));
+    System.out.println("Mandate request :: " +request.toString());
+    InputValidator.validate(bindingResult, request.getReference());
     List<MandateResponse> response = paymentService.mandate(authorization, request);
+    log.info("Mandate Response :: " + gsonForResponse.toJson(response));
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
   

@@ -97,6 +97,52 @@ public class MandateConfiguration {
     this.apiKey = apiKey;
   }
 
+  @Basic
+  @Column(name = "grant_type")
+  public String getGrantType() {
+    return grantType;
+  }
+
+
+  public void setGrantType(String grantType) {
+    this.grantType = grantType;
+  }
+
+  @Basic
+  @Column(name = "client_secret")
+  public String getClientSecret() {
+    return clientSecret;
+  }
+
+  public void setClientSecret(String clientSecret) {
+    this.clientSecret = clientSecret;
+  }
+
+  @Basic
+  @Column(name = "client_id")
+  public String getClientId() {
+    return clientId;
+  }
+
+  public void setClientId(String clientId) {
+    this.clientId = clientId;
+  }
+
+  @Basic
+  @Column(name = "scope")
+  public String getScope() {
+    return scope;
+  }
+
+  public void setScope(String scope) {
+    this.scope = scope;
+  }
+
+  private String grantType;
+  private String clientSecret;
+  private String clientId;
+  private String scope;
+
 
   private String password;
   private String apiKey;
