@@ -15,6 +15,7 @@ public interface SourceAccountRepository extends
 
     SourceAccount findOneById(Integer id);
     Optional<SourceAccount> findOneBySourceAccountNumber(String accountNumber);
+    Optional<SourceAccount> findOneBySourceAccountNumberAndAppUser(String accountNumber, String appUser);
     Optional<SourceAccount> findOneByBillerIdAndSourceAccountNumber(String billerId, String accountNumber);
 
 }

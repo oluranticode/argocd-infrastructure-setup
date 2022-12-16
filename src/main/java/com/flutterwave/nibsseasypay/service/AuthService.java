@@ -10,6 +10,7 @@ import com.flutterwave.nibsseasypay.repository.AuthRepository;
 import com.flutterwave.nibsseasypay.repository.ConfigurationRepository;
 import com.flutterwave.nibsseasypay.security.JwtHandler;
 import com.flutterwave.nibsseasypay.util.JwtUtil;
+import com.google.gson.Gson;
 import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,7 +90,8 @@ public class AuthService {
       Claims authClaim = JwtUtil.decodeTokenClaims(authCredentials);
       Auth auth = authRepository.findOneByUniqueIdAndStatus(authClaim.get("id").toString(), "ACTIVE").orElseThrow(() ->
           new AuthenticationException("Invalid Token"));
-      if(auth.getType().equals("CONFIGURATION") && (path.equals("/configurations") || path.equals("/appusers"))) {
+      System.out.println(new Gson().toJson(auth));
+      if(auth.getType().equals("CONFIGURATION") && (path.equals("/configurations") || path.equals("/appusers") || path.equals("/profile/sourceaccount"))) {
         return JwtUtil.decode(authCredentials, auth.getPassword());
 //      Claims claims = JwtHandler.decodeJWT(authCredentials, auth.getClientSecret());
 //      log.info("claims=" + new GsonBuilder().create().toJson(claims));
