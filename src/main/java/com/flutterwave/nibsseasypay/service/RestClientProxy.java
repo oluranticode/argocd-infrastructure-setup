@@ -260,10 +260,10 @@ public class RestClientProxy {
       Request request = builder.build();
       Response response = client.newCall(request).execute();
       String resBody = response.body().string();
-      log.info(String.format("%s response payload from NIBSS EASY PAY %s ", requestId, gson.toJson(resBody)));
+      log.info(String.format("%s response payload from NIBSS EASY PAY %s ", requestId, resBody));
       log.info(String.format(" %s response HTTP status code from  NIBSS EASY PAY ", requestId),
           response.code());
-      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), gson.toJson(resBody), String.valueOf(response.code()), String.valueOf(response.code()), "");
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), resBody, String.valueOf(response.code()), String.valueOf(response.code()), "");
       return resBody;
     } catch (Exception e) {
       log.info(String.format("%s Request failed", requestId), e.getMessage());
