@@ -55,10 +55,10 @@ public class ChargeRequest {
            .build();
     }
 
-    public static Payment buildPayment(ChargeRequest request, Configuration configuration, String transactionId, SourceAccount sourceAccount) {
+    public static Payment buildPayment(ChargeRequest request, Configuration configuration, String linkingReference, SourceAccount sourceAccount) {
         Payment payment = new Payment();
         payment.setAppUser(sourceAccount.getAppUser());
-        payment.setLinkingReference(transactionId);
+        payment.setLinkingReference(linkingReference);
         payment.setTransactionId(request.getTransaction().getReference());
         payment.setAmount(request.getOrder().getAmount());
         payment.setBeneficiaryAccountName(request.getTransaction().getSourceoffunds().getAccount().getTo().getName());

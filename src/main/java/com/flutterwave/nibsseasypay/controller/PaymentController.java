@@ -57,10 +57,10 @@ public class PaymentController {
 
     @PostMapping(path = "/charge/nameenquiry", produces = "application/json")
   public ResponseEntity<PaymentResponse> nameEnquiry(@RequestHeader("Authorization") String authorization, @Valid @RequestBody NameEnquiryRequest request, BindingResult bindingResult) {
-    log.info("Generate transaction request : " + gsonForResponse.toJson(request));
+    log.info(String.format("Generate transaction request : %s ",  gsonForResponse.toJson(request)));
     InputValidator.validate(bindingResult, request.getTransaction().getReference());
     PaymentResponse response = paymentService.nameEnquiry(authorization, request);
-    log.info("Generate transaction response " + gsonForResponse.toJson(response));
+    log.info(String.format("Generate transaction response: %s ",  gsonForResponse.toJson(response)));
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 

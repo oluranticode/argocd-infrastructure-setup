@@ -107,13 +107,16 @@ public class PaymentService {
     checkTransactionExist(chargeRequest.getTransaction().getReference());
 
 
-    SourceAccount sourceAccount = fineOneByAccount(chargeRequest.getTransaction()
-            .getSourceoffunds().getAccount().getFrom().getNumber());
+    Auth auth = getAuth(authorization);
+
+
+    SourceAccount sourceAccount = fineOneByAccountAndAppUser(chargeRequest.getTransaction()
+            .getSourceoffunds().getAccount().getFrom().getNumber(), auth.getAppUser());
 
     System.out.println(sourceAccount);
 
 //    Configuration configuration = configurationRepository.findOneById(1);
-    Auth auth = getAuth(authorization);
+
 
     Configuration configuration = configurationRepository.findOneByAppUser(auth.getAppUser())
         .orElseThrow(() -> new NotFoundException("Configuration not found"));
@@ -204,6 +207,7 @@ public class PaymentService {
 
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
         LogType.NAME_ENQUIRY.name(), gson.toJson(nameEnquiryRequest), "", "", "", configuration.getAppUser());
+
     String referecne = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/nameenquiry";
     NibssNameEquiryRequest nibssNameEquiryRequest = NameEnquiryRequest.nameEnquiryRequest(nameEnquiryRequest, referecne);
@@ -228,7 +232,6 @@ public class PaymentService {
     PaymentResponse paymentResponse = new PaymentResponse();
     Payment payment = verifyTransactionExist(transactionId);
     if(payment.getResponseCode() != null && payment.getResponseCode().equals(ResponseCodeAndMessages.SUCCESSFUL.code())) {
-
        return PaymentResponse.buildSuccessfulPaymentResponse(payment);
     }
 
@@ -309,10 +312,11 @@ public class PaymentService {
 //      saveLogService.saveLog(mandateRequest.getReference(),
 //          LogType.MANDATE_REQUEST.name(), gson.toJson(response), "", "", "",
 //          auth.getAppUser());
-      System.out.println("MANDATE_REQUEST ====  " + response);
+      System.out.println("MANDATE_RESPONSE ====  " + response);
 
     }catch (Exception e) {
-
+      System.out.println(e.getMessage());
+      e.printStackTrace();
     }
 
 
@@ -335,7 +339,7 @@ public class PaymentService {
     Configuration configuration = configurationRepository.findOneByAppUser(auth.getAppUser())
         .orElseThrow(() -> new NotFoundException("Configuration not found"));
 
-    SourceAccount sourceAccount = fineOneByAccount(accountNumber);
+    SourceAccount sourceAccount = fineOneByAccountAndAppUser(accountNumber, auth.getAppUser());
     saveLogService.saveLog("",
         LogType.GET_BALANCE.name(), "", "", "", "", auth.getAppUser());
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/balanceenquiry";
@@ -405,6 +409,13 @@ public class PaymentService {
         new BadRequestException("Source Account number (" + accountNumber + ") does not exists")
     );
   }
+
+  private SourceAccount fineOneByAccountAndAppUser(String accountNumber, String appUser) {
+    return sourceAccountRepository.findOneBySourceAccountNumberAndAppUser(accountNumber, appUser).orElseThrow(() ->
+        new BadRequestException("Source Account number (" + accountNumber + ") does not exists")
+    );
+  }
+
 
 
   private Configuration fineOneByBillerId(String billerId) {
