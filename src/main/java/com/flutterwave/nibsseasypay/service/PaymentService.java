@@ -312,10 +312,11 @@ public class PaymentService {
 //      saveLogService.saveLog(mandateRequest.getReference(),
 //          LogType.MANDATE_REQUEST.name(), gson.toJson(response), "", "", "",
 //          auth.getAppUser());
-      System.out.println("MANDATE_REQUEST ====  " + response);
+      System.out.println("MANDATE_RESPONSE ====  " + response);
 
     }catch (Exception e) {
-
+      System.out.println(e.getMessage());
+      e.printStackTrace();
     }
 
 
