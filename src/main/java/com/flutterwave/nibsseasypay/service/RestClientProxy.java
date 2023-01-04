@@ -76,7 +76,7 @@ public class RestClientProxy {
       @Nullable Map<String, String> headers, Configuration configuration) {
     try {
       log.info("Headers " + headers);
-      log.info("request payload to wema : " + objectMapper.writeValueAsString(requestObject));
+      log.info("request payload to nibss : " + objectMapper.writeValueAsString(requestObject));
       HttpHeaders requestHeaders = new HttpHeaders();
       requestHeaders.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
       if (headers != null) {
@@ -85,9 +85,9 @@ public class RestClientProxy {
       HttpEntity<?> requestEntity = new HttpEntity<>(requestObject, requestHeaders);
       ResponseEntity<String> responseEntity = restTemplate
           .exchange(url, HttpMethod.POST, requestEntity, String.class, requestObject);
-      log.info("response payload from wema =====: " + responseEntity.toString());
-      log.info("response payload from wema : " + responseEntity.getBody());
-      log.info("response HTTP status code from wema : " + responseEntity.getStatusCode()
+      log.info("response payload from nibss =====: " + responseEntity.toString());
+      log.info("response payload from nibss : " + responseEntity.getBody());
+      log.info("response HTTP status code from nibss : " + responseEntity.getStatusCode()
           .toString());
 //      if (responseEntity != null && responseEntity.getBody() != null) {
 //        if (!responseEntity.getBody().contains("{")) {
@@ -177,10 +177,10 @@ public class RestClientProxy {
       Request request = builder.build();
       Response response = client.newCall(request).execute();
       String resBody = response.body().string();
-      log.info(String.format("%s response payload from NIBSS EASY PAY %s ", requestId, gson.toJson(resBody)));
+      log.info(String.format("%s response payload from NIBSS EASY PAY %s ", requestId, resBody));
       log.info(String.format(" %s response HTTP status code from NIBSS EASY PAY ", requestId),
           response.code());
-      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), gson.toJson(resBody), String.valueOf(response.code()), String.valueOf(response.code()), "");
+      saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), resBody, String.valueOf(response.code()), String.valueOf(response.code()), "");
       return gson.fromJson(resBody, responseClass);
     } catch (Exception e) {
       log.info(String.format("%s Request failed", requestId), e.getMessage());
@@ -343,14 +343,10 @@ public class RestClientProxy {
           "request payload to nibss :  " + request != null && request.body() != null ? request.body()
               .toString() : null);
       log.info("url : " + url);
-      System.out.println("request payload to nibss :  " + request != null && request.body() != null ? request.body()
-          .toString() : null);
       Response response = client.newCall(request).execute();
       String resBody = response.body().string();
       log.info("response payload from nibss : " + resBody);
       log.info("response HTTP status code from nibss : " + response.code());
-      System.out.println("response HTTP status code from nibss : " + response.code());
-      System.out.println("response payload from nibss : " + resBody);
 
       saveLogService.saveLog(reference, reqBody, resBody, operationType, String.valueOf(response.code()), "", "");
       if (reqMediaType.equals("application/json")) {

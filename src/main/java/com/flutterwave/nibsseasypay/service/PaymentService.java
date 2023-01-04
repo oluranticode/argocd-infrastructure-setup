@@ -70,7 +70,6 @@ public class PaymentService {
   private final SourceAccountRepository sourceAccountRepository;
   private final AuthRepository authRepository;
   private final MandateConfigurationRepository mandateConfigurationRepository;
-  private final List<Configuration> configurationList;
   private final MandateRepository mandateRepository;
 
   @Autowired
@@ -95,7 +94,6 @@ public class PaymentService {
     this.objectMapper = objectMapper;
     this.configurationRepository = configurationRepository;
     this.sourceAccountRepository = sourceAccountRepository;
-    this.configurationList = configurationRepository.findAll();
     this.authRepository = authRepository;
     this.mandateConfigurationRepository = mandateConfigurationRepository;
     this.mandateRepository = mandateRepository;
@@ -113,7 +111,6 @@ public class PaymentService {
     SourceAccount sourceAccount = fineOneByAccountAndAppUser(chargeRequest.getTransaction()
             .getSourceoffunds().getAccount().getFrom().getNumber(), auth.getAppUser());
 
-    System.out.println(sourceAccount);
 
 //    Configuration configuration = configurationRepository.findOneById(1);
 
@@ -139,7 +136,7 @@ public class PaymentService {
 
       NibssNameEnquiryResponse nameEnquiryResponse = nameEnquiryInternal(chargeRequest, configuration, auth.getAppUser());
 
-      if(nameEnquiryResponse.getCode() != null) {
+      if( (nameEnquiryResponse.getCode() != null  &&  !nameEnquiryResponse.getCode().equals("") )|| (nameEnquiryResponse.getMessage()  !=null && nameEnquiryResponse.getMessage().contains("You cannot consume this service") ) ) {
         throw new BadRequestException(nameEnquiryResponse.getMessage());
       }
       payment.setBeneficiaryBankVerificationNumber(nameEnquiryResponse.getBankVerificationNumber());
@@ -156,8 +153,6 @@ public class PaymentService {
           nibssTransactionRequest, NibssTransactionResponse.class, header(auth.getAppUser()),
           "POST", "application/json", configuration,
           chargeRequest.getTransaction().getReference(), LogType.TRANSACTION_CHARGE.name(), auth.getAppUser());
-
-      System.out.println(gson.toJson(response));
 
       if(response.getResponseCode() != null && response.getResponseCode().equals(ResponseCodeAndMessages.SUCCESSFUL.code())) {
         payment.setSessionId(response.getSessionId());
@@ -177,25 +172,22 @@ public class PaymentService {
 //    } catch (Exception e) {
 //      e.printStackTrace();
 //    }
-
-
     return paymentResponse;
   }
-
 
   public NibssNameEnquiryResponse nameEnquiryInternal(ChargeRequest nameEnquiryRequest, Configuration configuration, String appUser) {
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
         LogType.NAME_ENQUIRY_INTERNAL.name(), gson.toJson(nameEnquiryRequest), "", "", "", configuration.getAppUser());
-    String referecne = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
+    String reference = configuration.getInstitutionCode() + TimeUtil.getCurrentDateTime() + UUIDUtil.RandGeneratedStr();
     String url = configuration.getBaseUrl() + "/nipservice/v1/nip/nameenquiry";
-    NibssNameEquiryRequest nibssNameEquiryRequest = NameEnquiryRequest.nameChargeEnquiryRequest(nameEnquiryRequest, referecne);
+    NibssNameEquiryRequest nibssNameEquiryRequest = NameEnquiryRequest.nameChargeEnquiryRequest(nameEnquiryRequest, reference);
 
     NibssNameEnquiryResponse response = this.restClientProxy.sendRequestProxy(url,
         nibssNameEquiryRequest, NibssNameEnquiryResponse.class, header(appUser),
         "POST", "application/json", configuration,
         nameEnquiryRequest.getTransaction().getReference(), LogType.NAME_ENQUIRY_INTERNAL.name(), appUser);
     saveLogService.saveLog(nameEnquiryRequest.getTransaction().getReference(),
-        LogType.NAME_ENQUIRY_INTERNAL.name(),"" , "gson.toJson(response)", "", "", configuration.getAppUser());
+        LogType.NAME_ENQUIRY_INTERNAL.name(),"" , gson.toJson(response), "", "", configuration.getAppUser());
       return response;
   }
 
@@ -286,14 +278,11 @@ public class PaymentService {
           .buildAuthData(mandateConfiguration);
       List<NibssMandateRequestData> mandateRequestData = MandateRequest
           .buildMandateData(mandateRequest.getMandateRequests());
-      System.out.println(gson.toJson(mandateRequestData));
 
       NibssMandateRequest nibssMandateRequest = NibssMandateRequest.builder()
           .auth(mandateAuthRequestData)
           .mandateRequests(mandateRequestData)
           .build();
-
-
 
       saveLogService.saveLog(mandateRequest.getReference(),
           LogType.MANDATE_REQUEST.name(), gson.toJson(mandateRequest), "", "", "",
@@ -312,10 +301,8 @@ public class PaymentService {
 //      saveLogService.saveLog(mandateRequest.getReference(),
 //          LogType.MANDATE_REQUEST.name(), gson.toJson(response), "", "", "",
 //          auth.getAppUser());
-      System.out.println("MANDATE_RESPONSE ====  " + response);
 
     }catch (Exception e) {
-      System.out.println(e.getMessage());
       e.printStackTrace();
     }
 
@@ -394,7 +381,6 @@ public class PaymentService {
     configuration.setGrantType(configuration1.getGrantType());
     String url = configuration.getBaseUrl() + "/reset";
 
-    System.out.println("configuration1 "+ gson.toJson(configuration1));
     NibssAuthResponse nibssAuthResponse = this.restClientProxy.getTokenRequestProxy(url, configuration, NibssAuthResponse.class);
     return  GetTokenResponse.builder()
         .token(nibssAuthResponse.getAccessToken())
@@ -432,8 +418,6 @@ public class PaymentService {
 
   private Map<String, String>  mandateHeader(String appUser, Configuration configuration) {
     GetTokenResponse  response = getMandateToken(appUser, configuration);
-    System.out.println(gson.toJson(response));
-    System.out.println("GetTokenResponse "+ gson.toJson(response));
     Map<String, String> headers = new HashMap<>(1);
     headers.put("Authorization", "Bearer " + response.getToken());
     return headers;

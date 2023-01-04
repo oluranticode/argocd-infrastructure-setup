@@ -135,8 +135,6 @@ public class RestClient {
       ResponseEntity<String> responseEntity = restTemplate
           .exchange(url, HttpMethod.POST, requestEntity, String.class);
 
-      System.out.println(gson.toJson(requestEntity));
-
       LOGGER.info("response payload from imali : " + responseEntity.getBody());
       LOGGER.info("response HTTP status code from imali : " + responseEntity.getStatusCode()
           .toString());

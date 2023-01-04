@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-  <property name="DEV_HOME" value="logs"/>
-  <appender name="FILE-AUDIT"
-    class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${DEV_HOME}/nibss-easy-pay-api.log</file>
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender"
+    name="FILE-AUDIT">
     <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
       <Pattern>
         %d{yyyy-MM-dd HH:mm:ss} - %msg%n
       </Pattern>
     </encoder>
+    <file>${DEV_HOME}/amex-api.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- rollover daily -->
-      <fileNamePattern>${DEV_HOME}/archived/nibss-easy-pay-api.%d{yyyy-MM-dd}.%i.log
+      <fileNamePattern>${DEV_HOME}/archived/nibss-easy-pay-api-api.%d{yyyy-MM-dd}.%i.log
       </fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy
         class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -19,33 +18,63 @@
       </timeBasedFileNamingAndTriggeringPolicy>
     </rollingPolicy>
   </appender>
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>
-        %d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n
-      </pattern>
-    </encoder>
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
+    <layout class="com.flutterwave.nibsseasypay.configuration.MaskingPatternLayout">
+      <maskPattern>\"bvn\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"password\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"apiKey\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"access_token\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"accessToken\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"token\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"originatorBankVerificationNumber\"\s*:\s*\"(.*?)\"
+      </maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"bankVerificationNumber\"\s*:\s*\"(.*?)\"
+      </maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"authorizationCode\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"targetBankVerificationNumber\"\s*:\s*\"(.*?)\"
+      </maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"beneficiaryBankVerificationNumber\"\s*:\s*\"(.*?)\"
+      </maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"mandateReferenceNumber\"\s*:\s*\"(.*?)\"
+      </maskPattern> <!-- SSN JSON pattern -->
+      <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n</pattern>
+    </layout>
   </appender>
   <appender class="ch.qos.logback.ext.loggly.LogglyBatchAppender" name="loggly">
     <endpointUrl>
       https://logs-01.loggly.com/inputs/e9048da1-696e-45d8-8284-43bc07fd86ca/tag/logback
     </endpointUrl>
-    <layout class="com.flutterwave.nibsseasypay.configuration.MaskLogSensitiveData">
+    <flushIntervalInSeconds>2</flushIntervalInSeconds>
+    <layout class="com.flutterwave.nibsseasypay.configuration.MaskingPatternLayout">
       <maskPattern>\"bvn\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
       <maskPattern>\"password\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
       <maskPattern>\"apiKey\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
-      <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %X{dd.trace_id} %X{dd.span_id} - %msg%n</pattern>
+      <maskPattern>\"access_token\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"accessToken\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"token\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"originatorBankVerificationNumber\"\s*:\s*\"(.*?)\"
+      </maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"bankVerificationNumber\"\s*:\s*\"(.*?)\"
+      </maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"authorizationCode\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"targetBankVerificationNumber\"\s*:\s*\"(.*?)\"
+      </maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"beneficiaryBankVerificationNumber\"\s*:\s*\"(.*?)\"
+      </maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>\"mandateReferenceNumber\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
+      <maskPattern>***</maskPattern> <!-- SSN JSON pattern -->
+      <regex>\b(access_token)</regex>
+      <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n</pattern>
     </layout>
-    <flushIntervalInSeconds>2</flushIntervalInSeconds>
+    <pattern>%d{"ISO8601", UTC} %p %t %c %M - %m%n</pattern>
   </appender>
-<!--  <appender name="loggly" class="ch.qos.logback.ext.loggly.LogglyBatchAppender">-->
-<!--    <endpointUrl>https://logs-01.loggly.com/inputs/e9048da1-696e-45d8-8284-43bc07fd86ca/tag/logback</endpointUrl>-->
-<!--    <pattern>%d{"ISO8601", UTC} %p %t %c %M - %m%n</pattern>-->
-<!--    <flushIntervalInSeconds>2</flushIntervalInSeconds>-->
-<!--  </appender>-->
-  <logger name="com.flutterwave.nibsseasypay" level="info">
+  <logger level="info" name="com.flutterwave.nibsseasypay">
     <!--<appender-ref ref="FILE-AUDIT"/>-->
-    <appender-ref ref="STDOUT"/>
+    <!--    <appender-ref ref="STDOUT"/>-->
     <appender-ref ref="loggly"/>
   </logger>
+  <property name="DEV_HOME" value="logs"/>
+  <root level="info">
+    <appender-ref ref="STDOUT"/>
+  </root>
 </configuration>

@@ -74,6 +74,7 @@ public class ChargeRequest {
         payment.setChannelCode(request.getChannelCode());
         payment.setMandateReferenceNumber(sourceAccount.getMandateReferenceNumber());
         payment.setTransactionLocation(request.getTransactionLocation());
+        payment.setBeneficiaryAccountName(request.getTransaction().getSourceoffunds().getAccount().getTo().getName());
         payment.setBillerId(configuration.getBillerId());
         return payment;
 
