@@ -62,8 +62,6 @@
       <maskPattern>\"beneficiaryBankVerificationNumber\"\s*:\s*\"(.*?)\"
       </maskPattern> <!-- SSN JSON pattern -->
       <maskPattern>\"mandateReferenceNumber\"\s*:\s*\"(.*?)\"</maskPattern> <!-- SSN JSON pattern -->
-      <maskPattern>***</maskPattern> <!-- SSN JSON pattern -->
-      <regex>\b(access_token)</regex>
       <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger.%M - %msg%n</pattern>
     </layout>
     <pattern>%d{"ISO8601", UTC} %p %t %c %M - %m%n</pattern>
