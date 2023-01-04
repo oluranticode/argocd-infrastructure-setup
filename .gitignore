@@ -33,6 +33,7 @@ build/
 .vscode/
 
 /logs/
+/DEV_HOME_IS_UNDEFINED/
 
 /src/main/resources/application.example.properties
 /src/main/resources/application.properties

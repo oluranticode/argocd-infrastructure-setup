@@ -75,7 +75,6 @@ public class PaymentController {
 
   @GetMapping(path = "/payment/balance",  produces = "application/json")
   public ResponseEntity<NibssBalanceEnquiryResponse> getBalance(@RequestHeader("Authorization") String authorization, @RequestParam(name="accountNumber", required = true ) String accountNumber) {
-    System.out.println("bearerToken :::::" + authorization);
     log.info("Get Balance :: ");
     NibssBalanceEnquiryResponse response = paymentService.getBalance(authorization, accountNumber);
     return new ResponseEntity<>(response, HttpStatus.OK);
@@ -91,7 +90,6 @@ public class PaymentController {
   public ResponseEntity<List<MandateResponse>> mandate(@RequestHeader("Authorization") String authorization, @Valid @RequestBody MandateRequest request, BindingResult bindingResult) {
     log.info("Mandate request :: " + request.getReference());
     log.info("Mandate request :: " + gson.toJson(request));
-    System.out.println("Mandate request :: " +request.toString());
     InputValidator.validate(bindingResult, request.getReference());
     List<MandateResponse> response = paymentService.mandate(authorization, request);
     log.info("Mandate Response :: " + gsonForResponse.toJson(response));

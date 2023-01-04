@@ -34,6 +34,15 @@ public class MaskLogSensitiveData implements AttributeConverter<String, String> 
     maskPatterns.add("\\\"bvn\\\"\\s*:\\s*\\\"(.*?)\\\"");
     maskPatterns.add("\\\"apiKey\\\"\\s*:\\s*\\\"(.*?)\\\"");
     maskPatterns.add("\\\"password\\\"\\s*:\\s*\\\"(.*?)\\\"");
+    maskPatterns.add("\"access_token\"\\s*:\\s*\\\"(.*?)\\\"");
+    maskPatterns.add("\\\"accessToken\\\"\\s*:\\s*\\\"(.*?)\\\"");
+    maskPatterns.add("\\\"token\\\"\\s*:\\s*\\\"(.*?)\\\"");
+    maskPatterns.add("\\\"originatorBankVerificationNumber\\\"\\s*:\\s*\\\"(.*?)\\\"");
+    maskPatterns.add("\\\"bankVerificationNumber\\\"\\s*:\\s*\\\"(.*?)\\\"");
+    maskPatterns.add("\\\"authorizationCode\\\"\\s*:\\s*\\\"(.*?)\\\"");
+    maskPatterns.add("\\\"targetBankVerificationNumber\\\"\\s*:\\s*\\\"(.*?)\\\"");
+    maskPatterns.add("\\\"beneficiaryBankVerificationNumber\\\"\\s*:\\s*\\\"(.*?)\\\"");
+    maskPatterns.add("\\\"mandateReferenceNumber\\\"\\s*:\\s*\\\"(.*?)\\\"");
     return (!maskPatterns.isEmpty()) ? maskPatterns : null;
   }
 }

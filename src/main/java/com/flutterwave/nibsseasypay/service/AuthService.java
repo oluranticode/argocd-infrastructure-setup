@@ -86,11 +86,9 @@ public class AuthService {
   public Claims getClaims(String authCredentials, String path) {
     try {
       authCredentials = authCredentials.replace("Bearer ", "");
-      System.out.println("Bereeeee" + authCredentials);
       Claims authClaim = JwtUtil.decodeTokenClaims(authCredentials);
       Auth auth = authRepository.findOneByUniqueIdAndStatus(authClaim.get("id").toString(), "ACTIVE").orElseThrow(() ->
           new AuthenticationException("Invalid Token"));
-      System.out.println(new Gson().toJson(auth));
       if(auth.getType().equals("CONFIGURATION") && (path.equals("/configurations") || path.equals("/appusers") || path.equals("/profile/sourceaccount"))) {
         return JwtUtil.decode(authCredentials, auth.getPassword());
 //      Claims claims = JwtHandler.decodeJWT(authCredentials, auth.getClientSecret());

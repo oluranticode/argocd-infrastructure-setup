@@ -16,13 +16,11 @@ public class JwtUtil {
 
   public static Claims decode(String authCredentials, String clientSecreteKey) {
     Claims claims = JwtHandler.decodeJWT(authCredentials, clientSecreteKey);
-    System.out.println(claims.toString());
     return claims;
   }
 
   public static Claims decodeTokenClaims(String token) {
     String[] splitToken = token.split("\\.");
-    System.out.println(token);
     String unsignedToken = splitToken[0] + "." + splitToken[1] + ".";
     DefaultJwtParser parser = new DefaultJwtParser();
     Jwt<?, ?> jwt = parser.parse(unsignedToken);
