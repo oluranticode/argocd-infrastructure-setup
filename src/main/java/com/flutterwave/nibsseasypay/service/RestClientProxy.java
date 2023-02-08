@@ -183,7 +183,7 @@ public class RestClientProxy {
       saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), resBody, String.valueOf(response.code()), String.valueOf(response.code()), "");
       return gson.fromJson(resBody, responseClass);
     } catch (Exception e) {
-      log.info(String.format("%s Request failed", requestId), e.getMessage());
+      log.info(String.format("%s Request failed %s", requestId, e.getMessage()));
       saveLogService.saveLog(requestId, operationType + "_LOG", gson.toJson(reqBody), e.getMessage(), "500", "ERROR",appUser);
       throw new ProcessingException(e.getMessage());
     }
@@ -414,6 +414,9 @@ public class RestClientProxy {
           .add("grant_type", configuration.getGrantType())
           .add("scope", configuration.getScope())
           .build();
+
+
+      log.info(String.format("%s Get token request %s", configuration.getClientId(), gson.toJson(formBody)));
 
       Request request = new Request.Builder()
           .url(url)
