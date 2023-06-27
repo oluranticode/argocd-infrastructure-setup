@@ -1,0 +1,26 @@
+name: budpay-mobile-app-v2-api-dev
+project: dev
+namespace: devns
+values: |-
+  fullnameOverride: budpay-mobile-app-v2-api-dev
+  image:
+    repository: 454617234462.dkr.ecr.us-east-1.amazonaws.com/budpay-mobile-app-v2-api:development-4552655491
+  namespace: devns
+  containerPort: 80
+  resources:
+    requests:
+      memory: 500Mi
+      cpu: 0.5
+    limits:
+      memory: 2Gi
+      cpu: 0.5
+  autoscaling:
+    enabled: true
+  ingress:
+    host: budpay-mobile-app-v2-api-dev
+  env:
+    enabled: true 
+  lProbe:
+    enabled: false
+  rProbe:
+    enabled: false
