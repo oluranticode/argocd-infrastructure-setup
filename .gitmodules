@@ -1,0 +1,3 @@
+[submodule "Desktop/temzy-library/project-flw/DevOps/argocd-infra/argocd-manifest"]
+	path = Desktop/temzy-library/project-flw/DevOps/argocd-infra/argocd-manifest
+	url = https://github.com/oluranticode/argocd-infrastructure-setup.git
