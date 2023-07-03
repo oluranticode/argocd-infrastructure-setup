@@ -1,0 +1,178 @@
+default:
+  image: glyhood/ci-image:latest
+  tags:
+    - ekscluster 
+
+variables: 
+  DOCKER_DRIVER: overlay 
+  MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  AWS_ECR: 454617234462.dkr.ecr.us-east-1.amazonaws.com 
+  AWS_REGION: us-east-1
+ 
+
+
+.build_image:
+  stage: build   
+  services:
+    - docker:20.10.16-dind
+  variables:  
+    # DOCKER_HOST: tcp://docker:2376
+    # DOCKER_TLS_CERTDIR: "/certs"
+    # DOCKER_TLS_VERIFY: 1
+    # DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+
+    # DOCKER_DRIVER: overlay
+  before_script:
+    - CI_PROJECT_NAME=$(echo $CI_PROJECT_NAME | tr '[:upper:]' '[:lower:]') &&
+    - APP_RESR_NAME=$CI_PROJECT_NAME-$CI_COMMIT_BRANCH
+    - echo $APP_RESR_NAME
+    - mkdir ~/.aws
+    - export CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME/\//-} || true 
+    - aws configure set region $AWS_REGION &&
+    - echo [default] >> ~/.aws/credentials
+    - echo aws_access_key_id = $ACCESS_KEY >> ~/.aws/credentials
+    - echo aws_secret_access_key = $AWS_SECRET >> ~/.aws/credentials 
+    - $(aws ecr get-login --no-include-email --region $AWS_REGION | sed 's|https://||') &&
+    - aws ecr create-repository --repository-name $CI_PROJECT_NAME || true 
+    # - nmap -sT -p- docker
+    # - until docker info; do sleep 1; done
+    - | 
+      case $CI_COMMIT_REF_NAME in
+      "main" | "master" | "pilot" | "dev" | "develop" | "staging")
+        export CI_JOB_ID=$CI_ENVIRONMENT_NAME-$CI_JOB_ID
+        echo "JOB_ID=$CI_JOB_ID" >> job.env
+        ;;
+      *)
+        export CI_JOB_ID=$CI_COMMIT_REF_NAME-$CI_ENVIRONMENT_NAME-$CI_JOB_ID
+        echo "JOB_ID=$CI_JOB_ID" >> job.env
+        ;;
+      esac
+      
+    # - aws ecr put-lifecycle-policy --repository-name $CI_PROJECT_NAME --lifecycle-policy-text "file://argocd/add-ons/ecr-lifecycle-policy.json" || true
+  script:
+    - >
+    - apk add jq
+    - aws secretsmanager create-secret --name $APP_RESR_NAME  --description "$APP_RESR_NAME"  --secret-string "{\"T1\":\"1\"}" || true
+    - aws secretsmanager get-secret-value --secret-id $APP_RESR_NAME --output text --query SecretString > .ci-secrets
+    - DBHOST="$(jq -r '.DBHOST' .ci-secrets)"
+    - DS_NAME="$(jq -r '.DS_NAME' .ci-secrets)"
+    - DBUSER="$(jq -r '.DBUSER' .ci-secrets)"
+    - DBPASSWORD="$(jq -r '.DBPASSWORD' .ci-secrets)"
+
+    # - sed -i "s/Environment.GetEnvironmentVariable(\"DBHOST\")/\"$DBHOST\"/gI" $DB_CONFIG_PATH
+    # - sed -i "s/Environment.GetEnvironmentVariable(\"DBUSER\")/\"$DBUSER\"/gI" $DB_CONFIG_PATH
+    # - sed -i "s/Environment.GetEnvironmentVariable(\"DBPASSWORD\")/\"$DBPASSWORD\"/gI" $DB_CONFIG_PATH
+
+
+    - docker build --build-arg DBUSER=$DBUSER  --build-arg DBPASSWORD=$DBPASSWORD  --build-arg DBHOST=$DBHOST  --build-arg DS_NAME=$DS_NAME  -t $AWS_ECR/$CI_PROJECT_NAME:$CI_JOB_ID .
+    - docker push $AWS_ECR/$CI_PROJECT_NAME:$CI_JOB_ID
+  after_script:
+    - echo "docker image successfully pushed to ECR"
+  artifacts: 
+    reports:
+      dotenv: job.env 
+
+
+
+
+
+.deploy_test_app_auto:
+  stage: deploy
+  environment:
+    name: development
+  variables:
+    app_version: "$CI_COMMIT_BRANCH-$CI_PIPELINE_ID"
+    BUILD_JOB_ID: $JOB_ID
+    manifest_dir: argocd-manifest/apps/dev
+    filename: $manifest_dir/$CI_PROJECT_NAME-$CI_COMMIT_BRANCH.yaml
+    image_tag: $CI_PROJECT_NAME:$BUILD_JOB_ID
+    app_ingress: $CI_PROJECT_NAME-$CI_COMMIT_BRANCH
+    DD_ALERT: 'echo -e "done building"'
+  before_script: 
+    - git clone https://$GIT_USER:$GIT_TOKEN@gitlab.com/cicd-repo/devops/argocd-manifest.git &&
+    - git config --global user.email "gitlab@gitlab.com" &&
+    - git config --global user.name "GitLab CI/CD" &&
+    - CI_PROJECT_NAME=$(echo $CI_PROJECT_NAME | tr '[:upper:]' '[:lower:]') &&
+    - echo "Commence process to deploy test $CI_PROJECT_NAME app via ArgoCD" &&
+    - echo $BUILD_JOB_ID 
+    - |
+      if [[ ! -e $filename ]]; then
+        echo "creating the argocd file for the project"  
+        cat argocd-manifest/sample-argo-file-dev.yaml >> $filename-temp
+        sed -i "s/APP_NAME/$app_ingress/gI" $filename-temp
+        sed -i "s/NAME_SPACE/$NAME_SPACE/gI" $filename-temp
+        sed -i "s/APP_ENV/$APP_ENV/gI" $filename-temp
+        sed -i "s/APP_PORT/$PORT/gI" $filename-temp
+        mv $filename-temp  $filename
+      fi
+    
+    - sed -i "s/repository:.*/repository:\ 454617234462.dkr.ecr.us-east-1.amazonaws.com\/$image_tag/gI" $filename
+  after_script:
+    - cd $manifest_dir &&
+    - git add --all &&
+    - git commit -m "Deploy test $CI_PROJECT_NAME app version ${app_version} for $CI_PROJECT_NAME" &&
+    - result=$(git push origin main || echo "False")
+    - |
+      if [ "$result" == "False" ]; then
+        echo "A gap between two push, let's pull and retry"
+        git pull
+        git push origin main
+      fi
+    - 'eval "$DD_ALERT"'
+  only:
+    - dev
+    - staging
+
+ 
+
+
+.deploy_prod_app_auto:
+  stage: deploy
+  environment:
+    name: production
+  variables:
+    app_version: "$CI_COMMIT_BRANCH-$CI_PIPELINE_ID"
+    BUILD_JOB_ID: $JOB_ID
+    manifest_dir: argocd-manifest/apps/prod
+    filename: $manifest_dir/$CI_PROJECT_NAME-$CI_COMMIT_BRANCH.yaml
+    image_tag: $CI_PROJECT_NAME:$BUILD_JOB_ID
+    app_ingress: $CI_PROJECT_NAME-$CI_COMMIT_BRANCH
+    DD_ALERT: 'echo -e "\e[95;1mView the link below to see the container logs deployed on $(date).\nIn some cases it could take 5 to 10 mins to be available.\nhttps://app.datadoghq.com/containers?query=image_tag%3A$BUILD_JOB_ID&tab=logs \nLogs are not available for test deployments."'
+  before_script:
+    - git clone https://$GIT_USER:$GIT_TOKEN@@gitlab.com/cicd-repo/devops/argocd-manifest.git &&
+    - git config --global user.email "gitlab@gitlab.com" &&
+    - git config --global user.name "GitLab CI/CD" &&
+    - CI_PROJECT_NAME=$(echo $CI_PROJECT_NAME | tr '[:upper:]' '[:lower:]') &&
+    - echo "Commence process to deploy prod $CI_PROJECT_NAME app via ArgoCD" &&
+    - echo $BUILD_JOB_ID 
+    - |
+      if [[ ! -e $filename ]]; then
+        echo "creating the argocd file for the project"  
+        cat $manifest_dir/sample-argo-file-prod.yaml >> $filename-temp
+        sed -i "s/APP_NAME/$app_ingress/gI" $filename-temp
+        sed -i "s/NAME_SPACE/$NAME_SPACE/gI" $filename-temp
+        sed -i "s/APP_ENV/$APP_ENV/gI" $filename-temp
+        sed -i "s/APP_PORT/$PORT/gI" $filename-temp
+        mv $filename-temp  $filename
+      fi
+    - sed -i "s/repository:.*/repository:\ 454617234462.dkr.ecr.us-east-1.amazonaws.com\/$image_tag/gI" $filename
+  after_script:
+    - cd $manifest_dir &&
+    - git add --all &&
+    - git commit -m "Deploy prod app version $app_version for $CI_PROJECT_NAME" &&
+    - result=$(git push origin main || echo "False")
+    - |
+      if [ "$result" == "False" ]; then
+        echo "A gap between two push, let's pull and retry"
+        git pull
+        git push origin main
+      fi
+    - 'eval "$DD_ALERT"'
+  only:
+    - master
+    - main
+    - pilot

@@ -1,0 +1,7 @@
+[
+    { "ParameterKey": "Environment", "ParameterValue": "dev" },
+    { "ParameterKey": "VpcId", "ParameterValue": "vpc-150b4b6f" },
+    { "ParameterKey": "PrivateSubnetId", "ParameterValue": "subnet-74fa3e39" },
+    { "ParameterKey": "AmiId", "ParameterValue": "ami-0f9fc25dd2506cf6d" },
+    { "ParameterKey": "InstanceSize", "ParameterValue": "t3.medium" }
+  ]
