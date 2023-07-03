@@ -1,0 +1,68 @@
+global:
+  image:
+    tag: "v2.5.8"
+
+dex:
+  extraArgs:
+   - --disable-tls
+
+configs:
+  cm:
+    exec.enabled: true
+    url: https://argocd.budpay-cluster-dev.com
+    resource.customizations: |
+      networking.k8s.io/Ingress:
+        health.lua: |
+          hs = {}
+          hs.status = "Healthy"
+          return hs
+
+  # secret:
+  #   extra:
+  #     oidc.jumpcloud.clientSecret: ${jumpcloud_clientsecret}
+    
+  rbac:
+    policy.default: 'role:readonly'
+    policy.csv: |
+      p, role:admin, exec, create, */*, allow
+
+  repositories:
+    budpay:
+      # url: https://gitlab.com/api/v4/projects/46031901/packages/helm/stable
+      name: budpay
+      type: helm
+      password: "<GITLAB_TOKEN>"
+      username: "<GITLAB_TOKEN>"
+    argocd-manifest:
+      # url: https://gitlab.com/cicd-repo/devops/argocd-manifest.git
+      name: argocd-manifest
+      type: git
+      password: "<GITLAB_TOKEN>"
+      username: "<GITLAB_TOKEN>"
+
+redis-ha:
+  enabled: false
+
+controller:
+  replicas: 1
+
+server:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+  ingress:
+    enabled: true
+    ingressClassName: "nginx"
+    hosts:
+      - argocd.budpay-cluster-dev.com
+    https: true
+  extraArgs:
+    - --insecure
+
+repoServer:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+
+applicationSet:
+  replicaCount: 2
