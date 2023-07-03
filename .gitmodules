@@ -1,3 +1,0 @@
-[submodule "argocd-setup"]
-	path = argocd-setup
-	url = https://github.com/oluranticode/argocd-infrastructure-setup.git
