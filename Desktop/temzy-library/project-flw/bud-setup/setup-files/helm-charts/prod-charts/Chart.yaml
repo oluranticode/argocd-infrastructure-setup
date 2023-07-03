@@ -1,0 +1,4 @@
+apiVersion: v2
+name: budpay-dev-chart
+version: 0.1.0
+description: budpay prod chart
